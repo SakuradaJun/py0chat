@@ -160,10 +160,6 @@ class Radio(object):
         
         if str(self.label.text()) != title:
             self.RadioText(title)
-        #MetaData << media.metaData(Phonon::ArtistMetaData);
-        #MetaData << media.metaData(Phonon::AlbumMetaData);
-        #MetaData << media.metaData(Phonon::TitleMetaData);
-        #MetaData << media.metaData(Phonon::DateMetaData);
         
         
     def delayedInit(self):
@@ -196,6 +192,7 @@ class Radio(object):
     def RadionPlay(self,bool):
         if bool:
             if not self.RadioUrl:
+                self.PushButton_Play.setChecked(False)
                 gui.MessageBox(u'Url список для радио пуст.\n Добавте url для того что бы играть.',type=QtGui.QMessageBox.Critical, title = u'Ошибка')
                 return
             self.delayedInit()
@@ -212,6 +209,7 @@ class Radio(object):
             
             self.PushButton_Play.setText('Stop')
         else:
+            if not self.m_media: return
             self.ProgressBar_buffer.hide()
             self.IsPlay = False
             self.m_media.stop()

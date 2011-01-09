@@ -55,7 +55,7 @@ class CacheToken:
 		yaml.dump(self.bd, file_h, 
 				default_flow_style=None,
 				encoding='utf-8',
-				allow_unicode=True,)
+				allow_unicode=True)
 		file_h.close()
 		
 	def Load(self):
@@ -64,7 +64,9 @@ class CacheToken:
 			self.bd = yaml.load(file_h)
 		except Exception,err:
 			print '# %s' % (str(err))
-			return False
+			self.bd = {None:None}
+			self.Save()
+			return True
 		if self.bd is None:
 			self.bd = {'def':'None'}
 		file_h.close()
@@ -91,13 +93,10 @@ class CacheToken:
 						self.bd['IP %s Имеет два токена ID:%s' % (self.ip_current,time.time())] = Token
 						self.Save()
 						return False
-		print "%s %s" % (self.ip_current,Token)
+		#print "%s %s" % (self.ip_current,Token)
 		self.bd[str(self.ip_current)] = str(Token)
 		self.Save()
 		return True
-
-
-
 
 class MainQThread(QtCore.QThread):
 

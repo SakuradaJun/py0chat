@@ -39,8 +39,20 @@ class Config:
 		},
 		'debug': {
 			'print_log_in_console':False
+		},
+		
+		'radio' : {
+			'radio_current': 
+				{'Radioanon': 'http://radioanon.ru:8000/radio'} 
+		},
+		
+		'RadioUrl' :{ 
+			u'Radioanon':'http://radioanon.ru:8000/radio',
+			u'Эхо москвы':'http://w04-cn03.akadostream.ru:8000/moscowecho48.mp3',
+			u'Какое то там...':'http://stream1.radiostyle.ru:8001/luu25-mm'
 		}
 	}
+
 	def __init__(self):
 		pass
 		

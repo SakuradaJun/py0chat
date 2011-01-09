@@ -331,7 +331,7 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 		conf_o.settings['user_nick'] = unicode(self.lineEdit_Name.text()).encode('utf-8')
 		conf_o.settings['NamefagMode'] = self.checkBox_NameFag.isChecked()
 		if self.RadioUrlActive: conf_o.settings['radio_current'] = self.RadioUrlActive;
-		if self.RadioUrl: conf_o.settings['radio'] = {'UrlList':self.RadioUrl}
+		if self.RadioUrl: conf_o.settings['RadioUrl'] = self.RadioUrl
 		conf_o.Save()
 		
 	def LoadConfig(self):
@@ -358,10 +358,10 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 		self.changeStyle(conf_o.settings['style_color']['style'], conf_o.settings['style_color']['originalPalette'])
 		self.setWindowTitle(QtGui.QApplication.translate("MainWindow", gloal_windowsTitle+" - "+conf_o.settings['servers'][conf_o.settings['current_server']]['host']+":"+str(conf_o.settings['servers'][conf_o.settings['current_server']]['port']), None, QtGui.QApplication.UnicodeUTF8))
 		QtGui.QApplication.setApplicationName(gloal_windowsTitle)
-		
+		if 'RadioUrl' in conf_o.settings: self.RadioUrl = conf_o.settings['RadioUrl']
 		if 'radio' in conf_o.settings: 
 			if 'radio_current' in conf_o.settings: self.RadioUrlActive = conf_o.settings['radio_current']; print 'Загруженна текущая'
-			if 'UrlList' in conf_o.settings['radio']: self.RadioUrl = conf_o.settings['radio']['UrlList']
+			
 		#msgBox.exec();
 	## Tray
 	def createActions(self):
