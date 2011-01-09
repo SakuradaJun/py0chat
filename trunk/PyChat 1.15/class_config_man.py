@@ -44,8 +44,8 @@ class Config:
 	def __init__(self):
 		pass
 		
-	def Save(self):
-		if self.Load_and_Return() == self.settings:
+	def Save(self,check=True):
+		if check and self.Load_and_Return() == self.settings:
 			return True
 		
 		file_h = file(self.setting_file_name,'w+')
@@ -58,15 +58,22 @@ class Config:
 		file_h.close()	
 		
 	def Load_and_Return(self):
-		file_h = file(self.setting_file_name,'r')
-		settings = yaml.load(file_h)
-		file_h.close()
-		return settings
+		try:
+			file_h = file(self.setting_file_name,'r')
+			settings = yaml.load(file_h)
+			file_h.close()
+			return settings
+		except Exception,err:
+			print '# %s' % (str(err))
+			return self.def_settings
 		
 			
 	def Load(self):
 		try:
-			self.settings = self.Load_and_Return()
+			file_h = file(self.setting_file_name,'r')
+			settings = yaml.load(file_h)
+			file_h.close()
+			self.settings = settings
 		except :
 			print "# Error: произошла ошибка при загрузке конфига %s будут использованны настройки по умолчанию." % (self.setting_file_name)
 			self.set_def_settings()
@@ -79,4 +86,5 @@ class Config:
 			
 	def set_def_settings(self):
 		self.settings = self.def_settings
+		self.Save(False)
 
