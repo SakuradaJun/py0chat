@@ -59,10 +59,11 @@ class CacheToken:
 		file_h.close()
 		
 	def Load(self):
-		file_h = file(self.bd_file_name,'r')
 		try:
+			file_h = file(self.bd_file_name,'r+')
 			self.bd = yaml.load(file_h)
-		except TypeError:
+		except Exception,err:
+			print '# %s' % (str(err))
 			return False
 		if self.bd is None:
 			self.bd = {'def':'None'}
