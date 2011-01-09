@@ -9,14 +9,27 @@ Created on 03.01.2011
 gloal_windowsTitle = "PyChat 1.15 (dbg)"
 
 import re, os, sys
-#, gc
 from class_config_man import *
 from class_MainQThread import *
-from PyQt4 import QtCore, QtGui
-#from PyQt4 import phonon
+from PyQt4 import QtCore, QtGui #,phonon
 import gui
 from PostParser import *
 
+def translate(Text_tr):
+
+	eng_key = u"""qwertyuiop[]asdfghjkl;'zxcvbnm,./QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>?""" #qwertyuiop[]asdfghjkl;'zxcvbnm,./QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>?
+	rus_key = u"""йцукенгшщзхъфывапролджэячсмитьбю.ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,""" #йцукенгшщзхъфывапролджэячсмитьбю.ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,
+	i = 0
+	
+	while i < 66:
+		current_eng = unicode(eng_key[i]).encode('utf-8')
+		current_rus = unicode(rus_key[i]).encode('utf-8')
+		Text_tr = Text_tr.replace(current_rus, current_eng)
+		i +=1
+		
+	del eng_key ,rus_key
+	return Text_tr
+	
 class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 
 	NameFagInterator = 0
@@ -26,55 +39,53 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 	popUp_count = 1
 	Threads_dic = {}
 	Threads_exits = []
-	'''
-	body {
-		background-color:#EEEEEE; 
-	}
-	'''
-	TextEdit_css_style = """
 
+	TextEdit_css_style = """
 	.m_highlight {
-	border-left: 2pt solid #FFFFA0;
-	-webkit-animation-name: highlight;
-	-webkit-animation-duration: 1.2s;
-	-webkit-animation-iteration-count: 1;
-	-webkit-animation-timing-function: linear;
-}
+		border-left: 2pt solid #FFFFA0;
+		-webkit-animation-name: highlight;
+		-webkit-animation-duration: 1.2s;
+		-webkit-animation-iteration-count: 1;
+		-webkit-animation-timing-function: linear;
+	}
 
 	body {
 	background: url('images/background.png') repeat;
-}
-
-	@-webkit-keyframes highlight {
-	0% {
-		background-color: #FFFFA0;
 	}
 
-	33% {
-		background-color: #FFFFA0;
-	}	
-	100% {
-		background-color: white;
-	}
+	@-webkit-keyframes highlight 
+	{
+		0% {
+			background-color: #FFFFA0;
+		}
+
+		33% {
+			background-color: #FFFFA0;
+		}	
+		100% {
+			background-color: white;
+		}
 	}
 	
 	.my { 
 		color : red; 
 	} 
+	
 	.reply {
 		color: #ff6600;
 	} 
+	
 	.msgNum {
 		color: #3366ff;
 		text-decoration: none;
 		font-family: Trebuchet MS,sans; 
 	}
+	
 	.lllla {
 	color: red;
 	text-decoration: none;
 	}
 	"""
-
 	
 	#S_TEST = "<a href='event:insert,2670133' class='msgNum'>2670133</a> <span class='post_time'>18:12:06</span><br />Тест."
 	
@@ -89,7 +100,8 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 			self.timer = QtCore.QTimer()
 			self.timer.start(4000)
 			self.connect(self.timer, QtCore.SIGNAL("timeout()"), self.de_op)
-
+		
+		# Установка CSS для TextEdit с сообщениями чата
 		self.textEdit_Chat.document().setDefaultStyleSheet(self.TextEdit_css_style);
 		
 		self.LoadConfig()
@@ -101,14 +113,16 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 		#self.textEdit_Chat.toHtml()
 		#self.AddText(u'[18:12:06] <b>&lt;<a href="event:insert,2670133"><2670133</span></a></b><b>&gt;</b> Грустное кино.<br />')
 		return
+		
+		# Тест popUP
 		if False:
-			self.showMessage(msg = u'Нарута', title=None)
-			self.showMessage(msg = u'Это', title=None)
-			self.showMessage(msg = u'Крута', title=None)
+			self.showPopupMessage(msg = u'Нарута', title=None)
+			self.showPopupMessage(msg = u'Это', title=None)
+			self.showPopupMessage(msg = u'Крута', title=None)
 			
-			self.showMessage(msg = u'Тимотей', title=None)
-			self.showMessage(msg = u'Яой', title=None)
-			self.showMessage(msg = u'Коната', title=None)
+			self.showPopupMessage(msg = u'Тимотей', title=None)
+			self.showPopupMessage(msg = u'Яой', title=None)
+			self.showPopupMessage(msg = u'Коната', title=None)
 		
 		if conf_o.settings['autoconnect']:
 			#self.Thread_Run()
@@ -123,8 +137,6 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 		self.setWindowIcon(self.icon)
 		
 		self.textEdit_Chat.setAcceptRichText(True)
-		#self.textEdit_Chat.setReadOnly(False)
-		
 		
 		'''
 		self.fontChat = QtGui.QFont()
@@ -198,11 +210,10 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 			self.connect(self.Threads_dic[obj_i], QtCore.SIGNAL("thread_is_die()"), self.Disconnected_)
 			
 			
-		
+	# Выполняется при закрытии главного окна
 	def closeEvent(self, event): self.SaveConfig(); app.quit();
 		
-		
-	def Disconnected_(self,*kwa): self.pushButton_Connect.setText('Connect')
+	def Disconnected_(self,*arg): self.pushButton_Connect.setText('Connect')
 		
 	def Thread_Run(self):
 		obj_i = 1
@@ -279,14 +290,13 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 
 		self.image = QtGui.QPixmap()
 		self.image.loadFromData(conf_o.DATA_CAPTCHA)
-		width = self.image.width()
-		height = self.image.height()
+		#width = self.image.width(); height = self.image.height()
 		self.label_captcha.setPixmap(self.image)
 		self.label_captcha.setEnabled(True)
 		self.label_captcha.show()
 		conf_o.DATA_CAPTCHA = None
 		
-	def HideCaptcha(self, text): self.label_captcha.hide()
+	def HideCaptcha(self, *a): self.label_captcha.hide()
 		
 	# Добавление сообщения в чат
 	def AddText(self,text):
@@ -295,7 +305,7 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 		utf = QtGui.QApplication.translate("MainWindow", text, None, QtGui.QApplication.UnicodeUTF8)
 		self.textEdit_Chat.append(utf)
 		self.textEdit_Chat.toHtml()
-		#self.showMessage(utf)
+		#self.showPopupMessage(utf)
 		
 	def ClearChat(self): self.textEdit_Chat.clear()
 
@@ -363,7 +373,6 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 		self.action_about = QtGui.QAction("&Show settings arr", self, triggered=self.PrintConfigArray)
 
 	def createTrayIcon(self):
-		pass
 		self.trayIconMenu = QtGui.QMenu(self)
 		self.trayIconMenu.addAction(self.minimizeAction)
 		self.trayIconMenu.addAction(self.maximizeAction)
@@ -375,7 +384,7 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 		self.trayIcon = QtGui.QSystemTrayIcon(self.icon)
 		self.trayIcon.setContextMenu(self.trayIconMenu)
 	
-	def showMessage(self, msg , title = 'Message:'):
+	def showPopupMessage(self, msg , title = 'Message:'):
 		'''
 		if hasattr(self, 'msg_popup'):
 			self.msg_popup.close()
@@ -398,24 +407,10 @@ class MainChatForm(QtGui.QMainWindow,gui.Ui_MainWindow, gui.Radio):
 		#self.msg_popup_list[-1].self_num = len(self.msg_popup_list)
 		
 	## ENd tray!
+	
 	def OptionWin(self):
 		self.win_conf = gui.Configuration_win(win,conf_o)
 		self.win_conf.show()
-	
-def translate(Text_tr):
-
-	eng_key = u"""qwertyuiop[]asdfghjkl;'zxcvbnm,./QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>?""" #qwertyuiop[]asdfghjkl;'zxcvbnm,./QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>?
-	rus_key = u"""йцукенгшщзхъфывапролджэячсмитьбю.ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,""" #йцукенгшщзхъфывапролджэячсмитьбю.ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,
-	i = 0
-	
-	while i < 66:
-		current_eng = unicode(eng_key[i]).encode('utf-8')
-		current_rus = unicode(rus_key[i]).encode('utf-8')
-		Text_tr = Text_tr.replace(current_rus, current_eng)
-		i +=1
-		
-	del eng_key ,rus_key
-	return Text_tr
 
 if __name__ == '__main__':
 	os.system('clear')
