@@ -24,11 +24,10 @@ setup(
     )
 
 # setup(
-    # version = "0.5.0",
-    # description = "py2exe sample script",
-    # name = "py2exe samples",
-    
-    # windows = ["chat_from.py"],
-    # console= ["Nullchat.py"],  
-    # )
+# version = "0.5.0",
+# description = "py2exe sample script",
+# name = "py2exe samples",
 
+# windows = ["chat_from.py"],
+# console= ["Nullchat.py"],  
+# )
