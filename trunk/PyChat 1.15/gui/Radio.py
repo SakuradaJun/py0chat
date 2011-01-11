@@ -232,6 +232,8 @@ class Radio(object):
             print "Save!"
             print win.lineEdit_Url.text() 
             print win.lineEdit_Name.text() 
+        else:
+            print 'Not save!'
         #win = QtGui.QDialog(self)
         #win.exec_()
         pass
