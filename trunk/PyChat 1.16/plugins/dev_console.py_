@@ -1,0 +1,46 @@
+#-*-coding: utf-8 -*-
+'''
+Created on 04.03.2011
+
+@author: anon
+'''
+from lib import Plugin,plugin_man
+from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import Qt
+
+class Dev_console_Plugin(Plugin): # производим наш плагин от родительского класса
+    Name = 'Dev_console_Plugin'
+ 
+    # замещаем нужные методы
+    def OnLoad(self):
+        self.AddGUI()
+        
+        #plugin_man.Plugin_CMD(('connect','0chan'))
+        #self.Plugin_CMD_BAK = plugin_man.Plugin_CMD
+        plugin_man.Plugin_CMD = self.reset_Plugin_CMD
+        
+    def OnCommand(self, cmd_args):
+        return
+        print cmd_args
+        return
+        if (cmd == 'hello' and len(args)> 0):
+            print 'It\'s', args[ 0], '!\nJeez, man, nice to meet you!'
+            return True
+        else:
+            return False
+        
+    def AddGUI(self):
+        self.Console = QtGui.QTextEdit(self.Window_Main.splitter)
+        self.Console.show()
+        self.Console.setStyleSheet("color: rgb(0, 255, 0);"
+                         "background-color: black;"
+                         "selection-background-color: white;"
+                         "font: 11pt \"Terminus\";")
+        self.Console.setReadOnly(True)
+        self.AddText('%s Loaded!' % (self.Name))
+        
+    def reset_Plugin_CMD(self,argv):
+        self.AddText(argv)
+        
+    def AddText(self,text):
+        self.Console.append(text)
