@@ -178,7 +178,7 @@ p, li { white-space: pre-wrap; }
            <item>
             <widget class="QLabel" name="label_Status">
              <property name="text">
-              <string>Stat</string>
+              <string/>
              </property>
             </widget>
            </item>
@@ -416,6 +416,11 @@ p, li { white-space: pre-wrap; }
         <height>71</height>
        </size>
       </property>
+      <property name="font">
+       <font>
+        <stylestrategy>PreferAntialias</stylestrategy>
+       </font>
+      </property>
       <property name="url" stdset="0">
        <url>
         <string>about:blank</string>
@@ -438,6 +443,12 @@ p, li { white-space: pre-wrap; }
          <width>16777215</width>
          <height>70</height>
         </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>11</pointsize>
+         <stylestrategy>PreferAntialias</stylestrategy>
+        </font>
        </property>
        <property name="mouseTracking">
         <bool>true</bool>
@@ -472,13 +483,6 @@ p, li { white-space: pre-wrap; }
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="label_MsgLen">
-       <property name="text">
-        <string>Msg len: 0</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="ButtonSend">
        <property name="toolTip">
         <string>Отправить</string>
@@ -510,7 +514,24 @@ p, li { white-space: pre-wrap; }
  <resources>
   <include location="res.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>checkBox_Name</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>lineEdit_Name</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>717</x>
+     <y>143</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>639</x>
+     <y>142</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
  <designerdata>
   <property name="gridDeltaX">
    <number>10</number>

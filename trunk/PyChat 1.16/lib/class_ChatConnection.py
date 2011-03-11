@@ -72,7 +72,6 @@ class ChatConnection(QtCore.QThread):
 
     def __del__(self):
         Debug.info('\033[91mMainQThread __DEL__\033[0m')
-        self.emit(QtCore.SIGNAL('conn_del()'))
         #self.CurentToken = False
         #if hasattr(self, 'socket_o'): self.socket_o.close()
         #self.wait()
@@ -86,7 +85,7 @@ class ChatConnection(QtCore.QThread):
     def run(self):
 
         while self.StopMainWhile == False and self.start_conn() : pass
-        self.printLog("STOP THREAD, quit main while.")
+        Debug.info("STOP THREAD, quit main while.")
         ##self.sendDisconnectSignal()
         #self.wait()
         ##self.terminate()
@@ -96,15 +95,17 @@ class ChatConnection(QtCore.QThread):
         #self.sendDisconnectSignal()
         #self.terminate()
         #del self.mainWin_obj.Threads_dic[self.self_id_in_dic]
-        self.wait()
+        ##self.emit(QtCore.SIGNAL('conn_del()'))
+        #self.wait()
 
-        #self.stop()
+        ###self.stop()
+        self.emit(QtCore.SIGNAL('conn_del()'))
         self.deleteLater()
         del self.obj_tab.obj_conn
     
     def start_conn(self):
         try:
-            self.printLog("\033[94mRun Thread \033[0m")
+            Debug.debug(Debug.OKBLUE+"Run Thread"+Debug.END)
             self.Set_Vars()
             if self.GetToken() == False: return False
             #self.stop()
@@ -288,7 +289,8 @@ class ChatConnection(QtCore.QThread):
             # 3 Ошибка
             if cmd == "\x03":
                 Debug.err(" Server err msg: %s" % (data))
-                self.PrintGui(data)
+                self.emit(QtCore.SIGNAL("conn_msg_chat_err(QString)"), QString.fromUtf8(data))
+                self.stop()
                 return False
                 
             
@@ -300,8 +302,9 @@ class ChatConnection(QtCore.QThread):
             # 5 - верификация (КАПЧА)  
             if cmd == "\x05":
                 try:
-                    self.PrintGui("Downloading captcha...");
+                    self.PrintGui("Downloading captcha...")
                     self.conf_o.DATA_CAPTCHA = urlopen(data).read()
+                    self.PrintGui("Done.")
                 except:
                     Debug.err("Error load captcha from %s" % (data))
                     self.PrintGui("Error loading captcha from: %s" % (data))
@@ -318,22 +321,23 @@ class ChatConnection(QtCore.QThread):
             # 7 - Успешный ввод капчи    
             if cmd == "\x07":
                 self.cpatcha_enter = True
-                Debug.info("\033[92mУспешно авторизован.\033[0m")
-                #self.emit(QtCore.SIGNAL("HideCaptcha()"))
-                #self.emit(QtCore.SIGNAL("ClearChat()"))  
+                Debug.debug(Debug.OKGREEN+"Успешно авторизован"+Debug.END)
                 self.emit(QtCore.SIGNAL("conn_authorization_success()"))  
                 return True
             return True
         
     def writeSocket(self,data):
-        #print '# Отправка: %s' % (data)
+        Debug.debug('Отправка: %s' % (data))
         try:
             self.socket_o.send(data)
         except socket.error, err:
             print str(err)
+            return False
+        return True
         
     def PrintGui(self,text):
         self.emit(QtCore.SIGNAL("conn_msg_sys(QString)"), QString.fromUtf8(text))
+        return text
         
     def printLog(self,str,print_n = False):
         if True:

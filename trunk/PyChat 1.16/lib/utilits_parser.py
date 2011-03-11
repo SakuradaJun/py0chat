@@ -56,7 +56,7 @@ def ParsePost(post_message):
             return t
     else:
         #print u"Not Found: %s\n" % (post_message)
-        Debug.err('Not found')
+        Debug.debug('Parser: not found',Debug.RED)
         return post_message
         #print post_message
         #[21:36:00] <b>&lt;<a href="event:insert,2677196"><span class="msgNum">2677196</span></a></b><b>&gt;</b> d

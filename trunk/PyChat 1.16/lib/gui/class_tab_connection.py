@@ -9,6 +9,7 @@ from class_tab import TAB
 from lib.class_ChatConnection import ChatConnection
 from lib.utilits import *
 from lib.utilits_parser import *
+#from __main__ import CONF_O,GLOBAL_VARS,P
 
 class TAB_Connection(TAB):
     
@@ -21,14 +22,16 @@ class TAB_Connection(TAB):
     chat_tokenpage = None
     chat_connName = ''
     
-    def __init__(self): QtGui.QWidget.__init__(self,self.obj_parent)
+    def __init__(self): 
+        #QtGui.QWidget.__init__(self,self.obj_parent)
+        super(TAB_Connection,self).__init__(self.obj_parent)
     
     def init_TWO(self,connIndex=None,conn_par=None, mainWin=None, IsAutoConn=False):
         if False: 
             self.obj_parent = QtGui.QTabWidget()
             self.Message_Webkit = QtWebKit.QWebView()
             self.lineEdit_Captcha = QtGui.QLineEdit()
-            
+       
         self.obj_parent = mainWin.chat_tabs
         self.obj_mainWin = mainWin
         self.CONF_O = self.obj_mainWin.CONF_O
@@ -54,7 +57,7 @@ class TAB_Connection(TAB):
             self.AddText(u'[20:39:39] <b>&lt;<a href="event:insert,28792"><font color="#000000">28792</font></a></b><b>&gt;</b>  искра, и ты покроешь собой город <a href="http://2ip.ru">http://2ip.ru</a> AND http://rghost.ru/4698495.view')
             self.AddText(u'[20:39:39] <b>&lt;<a href="event:insert,28793"><font color="#000000">28793</font></a></b><b>&gt;</b>  <span class="reply">&gt;&gt;28792</span> искра, и ты покроешь собой город <a href="http://py-chat.tk">http://py-chat.tk</a>')
         
-            self.AddText(Test_text+u' Text <a href="http://rghost.ru/4698495.png">http://rghost.ru/4698495.png</a> Text')
+            self.AddText(Test_text+u' Text \\s <a href="http://rghost.ru/4698495.png">http://rghost.ru/4698495.png</a> Text')
             #self.WEB_view.setUrl(QtCore.QUrl('www.google.com'))
         #self.WEB_page.mainFrame().evaluateJavaScript()
         #self.WEB_page.mainFrame().setHtml('efefasfas')
@@ -95,10 +98,8 @@ class TAB_Connection(TAB):
         #self.Message_Webkit.contextMenuEvent_OLD = self.Message_Webkit.contextMenuEvent
         #self.Message_Webkit.contextMenuEvent = self.Message_Webkit_MenuRequested
         #self.Message_Webkit.cus
-
-        skeleton = ReadFile('res/style/webkitstyle/Template.html')
         
-        self.WEB_page.mainFrame().setHtml(skeleton)
+        self.WEB_page.mainFrame().setHtml(WebKitStyle.Build())
         self.groupBox_OnConnected.hide()
         self.groupBox_captcha.hide()
         self.connect(self.Button_Connect, QtCore.SIGNAL("clicked()"), self.conn_Start_parr )
@@ -129,16 +130,21 @@ class TAB_Connection(TAB):
         #print  point,obj
         
         Menu = QtGui.QMenu(self)
+        Menu.addAction(QtGui.QAction("New tab", self, triggered = lambda x=None: self.obj_mainWin.CreateTab(1)))
         DefaultMenu = self.WEB_page.createStandardContextMenu()
         DefActionsQList = DefaultMenu.actions()
         #del DefaultMenu
        
         #DefaultMenu.setTitle('Default actions')
         #Menu.addAction(QtGui.QAction("Test", self))
-        
-        text = self.WEB_page.selectedText()
-        if text:
-            Menu.addAction(QtGui.QAction(text, self))
+        #QtCore.QString().fromUtf8
+        q_text = self.WEB_page.selectedText()
+        if q_text:
+            #text = unicode(q_text).encode('utf-8')
+            text = qStringToStr(q_text)
+            #text = str(q_text)
+            text = '*>'+text+'* '
+            Menu.addAction(QtGui.QAction('>>: '+text[:15]+'...', self,triggered = lambda x=0: self.Input.insertPlainText(QtCore.QString().fromUtf8(text))))
         
         for def_action in DefActionsQList:
             Menu.addAction(def_action)
@@ -152,7 +158,7 @@ class TAB_Connection(TAB):
         #self.Message_Webkit.contextMenuEvent_OLD(MenuEvent)
         
     def AddMainMenuActions(self,Menu):
-        Menu.addAction(QtGui.QAction("New tab", self, triggered = lambda x=None: self.obj_mainWin.CreateTab('0chan',('0chan.ru',1984,'http://0chan.ru/0chat'))))
+        #Menu.addAction(QtGui.QAction("New tab", self, triggered = lambda x=None: self.obj_mainWin.CreateTab(1)))
         ##Menu_WordFilter = QtGui.QMenu(Menu)
         ##Menu_WordFilter.setTitle("Word filter")
         ##Menu_WordFilter.addAction(QtGui.QAction("Edit...", self,
@@ -193,6 +199,8 @@ class TAB_Connection(TAB):
         self.Input.setFocus()
         
     def eventFilter(self,Qobj, event):
+        '''If you delete the receiver object in this function, be sure to return true. Otherwise, 
+        Qt will forward the event to the deleted object and the program might crash.'''
         #if 0: event = QtCore.QEvent()
                    
         if event.type() == QtCore.QEvent.KeyPress:
@@ -237,9 +245,11 @@ class TAB_Connection(TAB):
             self.obj_conn.stop()
             
     def conn_Del(self):
+        Debug.debug("Thread send del SIGNAL",Debug.RED)
         self.groupBox_captcha.hide()
         self.groupBox_OnConnected.hide()
         self.groupBox_Connect.show()
+        self.groupBox_Connect.setDisabled(False)
         self.Button_Disconnect.setDisabled(False)
         self.Button_Connect.setDisabled(False)
 
@@ -248,6 +258,7 @@ class TAB_Connection(TAB):
         #self.connect(obj, QtCore.SIGNAL("output_chat(QString)"), self.AddText)
         self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_msg_chat(QString)"),self.SIGNAL_msg_chat)
         self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_msg_sys(QString)"), self.SIGNAL_msg_sys)
+        self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_msg_chat_err(QString)"), self.SIGNAL_msg_chat)
         self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_captcha_show()"), self.Captcha_View)
         self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_authorization_success()"), self.OnConnected)
         self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_del()"), self.conn_Del)
@@ -268,11 +279,13 @@ class TAB_Connection(TAB):
     def SIGNAL_msg_chat(self,s):
         s = qStringToStr(s)
         self.AddText(s)
+        #self.tab_SetIcon_Modifed()
         self.P.Event('chat_message', s) 
         
     def SIGNAL_msg_sys(self,s):
         s = qStringToStr(s)
         self.AddText(s,False)
+        #self.tab_SetIcon_Modifed()
         self.P.Event('chat_message_sys', s)
         
     def WEB_LinkClicked(self,qUrl):
@@ -296,9 +309,10 @@ class TAB_Connection(TAB):
                 time = result[0]
                 num = result[1]
                 msg = Parser_IN(result[2])
-                #print msg
+                #Debug.debug(msg)
                 #Text = """<br />%s [%s]<br />%s""" % (num,time,msg)
                 
+                msg = msg.replace('\\', '&#92;')
                 Text = """<div class="replico">
                     <span class="inContact">%s</span>
                     <span class="inContentTime">&nbsp;[%s]</span>
@@ -316,19 +330,20 @@ class TAB_Connection(TAB):
                 Text = Text.replace('\n','<br />')
                 Text = Text.replace('\r','<br />')
                 
-        
         self.WEB_page.mainFrame().evaluateJavaScript((QtCore.QString("appendMessage('%s')" % (Text+'<br />'))))
         #self.WEB_page.mainFrame().evaluateJavaScript((QtCore.QString("replaceLastMessage('%s')" % (Text+'<br />'))))
         #self.WEB_page.mainFrame().evaluateJavaScript((QtCore.QString("appendNextMessageNoScroll('%s')" % (Text+'<br />'))))
         #self.WEB_page.mainFrame().evaluateJavaScript((QtCore.QString("appendNextMessage('%s')" % (Text+'<br />'))))
+    
     def SendMessage(self):
         msg = unicode(self.Input.toPlainText()).encode('utf-8')
+        if not msg: return
         if self.checkBox_Name.isChecked():
             name = unicode(self.lineEdit_Name.text()).encode('utf-8')
             msg = name+msg
         
-        self.obj_conn.writeSocket(msg)
-        self.Input.clear()
+        if self.obj_conn.writeSocket(msg):
+            self.Input.clear()
         
     def SendCaptcha(self): self.obj_conn.writeSocket(unicode(self.lineEdit_Captcha.text()).encode('utf-8'))
     
@@ -336,6 +351,7 @@ class TAB_Connection(TAB):
         image = QtGui.QPixmap()
         image.loadFromData(self.obj_mainWin.CONF_O.DATA_CAPTCHA)
         #width = image.width()height = image.height()
+        self.lineEdit_Captcha.clear()
         self.label_Captcha.setPixmap(image)
         #self.label_Captcha.setEnabled(True)
         self.groupBox_captcha.show()
@@ -348,6 +364,9 @@ class TAB_Connection(TAB):
         self.conn_Stop()
         self.deleteLater()
         
+    def tab_OnActive(self):
+        self.tab_SetIcon_None()
+        
     def __del__(self):
-        Debug.err("~TAB")
+        Debug.debug("~TAB",Debug.RED)
         #print 'DEL %s ' % (self.tab_GetName())

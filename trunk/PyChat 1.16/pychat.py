@@ -15,6 +15,7 @@ GLOBAL_VARS={'window_title':'PyChat 1.16 (dbg,plugin)'}
 import sys
 import os
 from PyQt4 import QtCore, QtGui, uic
+#import pysideuic
 from lib.class_Config import Config
 from lib.class_plugin_core import PluginHandler
 from lib.class_ChatConnection import ChatConnection
@@ -51,28 +52,31 @@ class Chat(QtGui.QMainWindow):
         if False: 
             self.chat_tabs = QtGui.QTabWidget()
             self.tab_bar = QtGui.QTabBar()
-        
-        QtGui.QMainWindow.__init__(self)
+        super(Chat,self).__init__()
         uic.loadUi('res/main.ui',self)
-                
+            
         self.icon_new_message.addPixmap(QtGui.QPixmap('res/Images/mail-unread-new.png'), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.icon_main.addPixmap(QtGui.QPixmap('res/Images/icon_16.png'), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(self.icon_main)
+        qapp.setWindowIcon(self.icon_main)
         
         #self.chat_tabs.i
         self.originalPalette = QtGui.QApplication.palette()
         #self.changeStyle('GTK+')
-        self.setStyleSheet(ReadFile('res/style/chat_message.css'))
+        #self.setStyleSheet(ReadFile())
         
         #self.chat_tabs.tabBar()
         QtGui.QApplication.setApplicationName(GLOBAL_VARS['window_title'])
         self.setWindowTitle(GLOBAL_VARS['window_title'])
         self.SetUpSignals()
         self.widget_Top.hide()
-
         self.show()
+        
         self.CONF_O.Load()
         self.P.LoadPlugins(self)
+        
+        
+        #self.installEventFilter(self)
         #print QtGui.QMainWindow.__subclasses__()
         
         #self.connect(self.Button_Connect, QtCore.SIGNAL("clicked()"), lambda x=0: Plugin_CMD(('connect','0chan')) )
@@ -84,23 +88,43 @@ class Chat(QtGui.QMainWindow):
         #self.timer.start(2300)
         #self.connect(self.timer, QtCore.SIGNAL("timeout()"), lambda: self.P.Event('chat_message', None) )
         #self.chat_tabs.changeEvent_OLD = self.chat_tabs.changeEvent
-        
+        #self.CreateTab(1).AddText(u'[20:39:39] <b>&lt;<a href="event:insert,28793"><font color="#000000">28793</font></a></b><b>&gt;</b> Test ТЕСТ')
         self.CreateTab(1)
         self.CreateTab(2)
+        #o = WebKitStyle()
+        #print WebKitStyle.Build()
         
-        #self.CreateTab('0chan',('0chan.ru',1984,'http://0chan.ru/0chat'))
-        #self.CreateTab('py-chat',('py-chat.tk',1984,'http://py-chat.tk'))
-        #self.CreateTab('py-chat',('py-chat.tk',1984,'http://py-chat.tk'))
-        #self.CreateTab('py-chat',('py-chat.tk',1984,'http://py-chat.tk'))
-        #self.CreateTab('py-chat',('py-chat.tk',1984,'http://py-chat.tk'))
-        #self.CreateTab('py-chat',('py-chat.tk',1984,'http://py-chat.tk'))
+    def keyReleaseEvent(self,event):
+        if event.key() == QtCore.Qt.Key_F11:
+            self.emit(QtCore.SIGNAL('main_win_miniStyle()'))
+        QtGui.QMainWindow.keyReleaseEvent(self,event)
         
+    def eventFilter(self,Qobj, event):
+        #TODO: not work: TypeError: invalid result type from Chat.eventFilter()
+        '''If you delete the receiver object in this function, be sure to return true. Otherwise, 
+        Qt will forward the event to the deleted object and the program might crash.'''
+        #return (Qobj, event)
+        #super(Chat,self).eventFilter(Qobj, event)
+        #super(QMainWindow, self).eventFilter(Qobj, event)
+        #return qapp.eventFilter(Qobj, event)
+        #return QtGui.QMainWindow.eventFilter(self,Qobj, event)
+        #return QtCore.QObject.eventFilter(Qobj, event)
+        #return QtGui.QMainWindow.eventFilter(Qobj, event)
+        #return Chat.eventFilter(Qobj, event)
+        return
+        if Qobj == self and event.type() == QtCore.QEvent.KeyPress:
+            if event.key() in (QtCore.Qt.Key_F11):
+                print 'F11 press'
+                self.emit(QtCore.SIGNAL('main_win_miniStyle()'))
+                return True
+        
+    
     def closeEvent(self, event): 
         c = self.chat_tabs.count()
         for x in xrange(0,c):
             self.chat_tabs.widget(x).OnClose(x)
         CONF_O.Save(); 
-        app.quit();
+        qapp.quit();
         
     def WordFilterWindow(self):
         WordFilter_Widget().exec_()
@@ -152,8 +176,8 @@ if __name__ == '__main__':
     #os.system('clear')
     script_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
     os.chdir(script_dir)
-    app =  QtGui.QApplication(sys.argv)
+    qapp =  QtGui.QApplication(sys.argv)
     CONF_O = Config()
     PLUGINH_O = PluginHandler()
     Chat_o = Chat()
-    app.exec_()
+    qapp.exec_()

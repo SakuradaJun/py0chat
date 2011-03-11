@@ -24,7 +24,7 @@ class Config():
         'admin_pass': None,
         'open_server_tabs': (2,3),
         'autoconnect': True,
-        'servers':(
+        'servers':[
                 {
                     'name':'Test',
                    'token_page': 'http://site.ru/',
@@ -54,7 +54,7 @@ class Config():
                     'NamefagMode': False,
                     'icon_path':'res/Images/0chan.ru.ico'
                 }
-            ),
+            ],
         'style_color': {
             'originalPalette': True,
             'MsgNumColor': '#3366ff',
@@ -86,7 +86,7 @@ class Config():
             
         
 
-        
+        Debug.info('Write config: \'%s\'' % (os.path.abspath(self.paths['config_dir']+'/'+self.setting_file_name)))
         file_h = file(self.setting_file_name,'w+')
         yaml.dump(settings, file_h, 
             default_flow_style=None,

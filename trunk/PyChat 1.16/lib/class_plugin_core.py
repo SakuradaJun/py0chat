@@ -47,7 +47,7 @@ class PluginHandler(object):
 			pass
 
 	def LoadPlugins(self,Window_Main):
-		from lib.plugin_kernel import KernelPlugin
+		#from lib.plugin_kernel import KernelPlugin
 		plugins_dir = './plugins'
 		try:
 			ss = os.listdir(plugins_dir) # Получаем список плагинов в /plugins

@@ -1,13 +1,13 @@
-# -*- encoding: utf-8 -*-
+#-*-coding: utf-8 -*-
 '''
 Created on 03.03.2011
 
 @author: anon
 '''
-from PyQt4.QtCore import QString
+from PyQt4 import QtCore
 from sys import platform
 from PyQt4 import QtGui
-import re
+import re, os
 reCompile_ImagesThumd_F = re.compile('(<a href="(http://.*(\.png|\.jpg|\.jpeg|\.gif))".*>.*</a>)')
 reCompile_ImagesRGHostRe_F = re.compile('(http\:\/\/rghost\.ru\/(\d+)\.view)')
 #reCompile_ImagesRGHostRe_R = re.compile('http:\/\/rghost\.ru\/\\1\.\\2')
@@ -16,6 +16,36 @@ reCompile_ImagesRGHostRe_F = re.compile('(http\:\/\/rghost\.ru\/(\d+)\.view)')
 #    print result.groups()
 #sys.exit()
 
+class class_WebKitStyle():
+    
+    setyleDirPath = os.path.abspath('res/style/webkitstyle')+'/'
+    TemplateFilePath = 'Template.html'
+    
+    #variantPath = 'Variants/Medium.css'
+    #variantPath = 'Variants/Small.css'
+    variantFilePath = 'Variants/Big.css'
+    
+    baseStyleFilePath = 'base.css'
+    mainCommon_FilePath = '../main_common.css'
+    
+    def Build(self):
+        templateHtml = ReadFile(self.setyleDirPath + self.TemplateFilePath)
+        Data_BaseStyle = ReadFile(self.setyleDirPath + self.mainCommon_FilePath)
+        Data_BaseStyle += ReadFile(self.setyleDirPath + self.baseStyleFilePath)
+        
+        BaseHref = self.getStyleBaseHref()
+        templateHtml = templateHtml.replace('%@',BaseHref,1)
+        templateHtml = templateHtml.replace('%@',Data_BaseStyle,1)
+        templateHtml = templateHtml.replace('%@',self.variantFilePath,1)
+        
+        templateHtml = templateHtml.replace('%@','')
+        #print templateHtml
+        return templateHtml
+
+    def getStyleBaseHref(self):
+        return QtCore.QUrl().fromLocalFile(QtCore.QString(self.setyleDirPath + self.TemplateFilePath)).toString()
+    
+        
 def AddImagesThumb(Text,size=(150,150)):
     #TODO: При клике на изображение разворачивать полную версию.
     Text = re.sub(reCompile_ImagesRGHostRe_F,'http://rghost.ru/\\2.png', Text)
@@ -67,6 +97,11 @@ class Debug_class():
     FAIL = '\033[91m' 
     ENDC = '\033[0m' 
     '''  
+    HEAD = '\033[95m'
+    END = '\033[0m'
+    RED = '\033[91m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
 
     def err(self,s, n = True):
         if platform != 'win32':
@@ -79,16 +114,25 @@ class Debug_class():
                 print m,    
             
     def warr(self,s, n = True): 
-        m = '# [Warring]: %s' % (str(s))
+        m = '# [Warring]: ' + str(s)
         if n: 
             print m
         else: 
             print m, 
             
     def info(self,s, n = True):
-        m = '# [Info]: %s' % (str(s))
+        m = '# [Info]: ' + str(s)
         if n: 
             print m
         else: 
             print m,
+            
+    def debug(self,s,color=None):
+		s = '# [Debug]: %s' % (s)
+		if platform == 'win32' or color == None: 
+			print s
+		else:
+			print color+s+self.END
+		
 Debug = Debug_class()
+WebKitStyle = class_WebKitStyle()

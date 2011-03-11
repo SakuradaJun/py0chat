@@ -37,7 +37,7 @@ class PLugin_PlaySound(Plugin):
                 self.sound_media = phonon.Phonon.MediaObject(parent)
                 self.sound_audioOutput = phonon.Phonon.AudioOutput(phonon.Phonon.MusicCategory, parent)
                 phonon.Phonon.createPath(self.sound_media, self.sound_audioOutput)
-        #self.PlaySound_Test()
+        self.PlaySound_Test()
         
     def p(self,s):
         print '# %s: %s' % (self.Name,s)
