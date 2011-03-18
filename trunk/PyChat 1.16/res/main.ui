@@ -35,39 +35,38 @@
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
      <widget class="QWidget" name="widget_Top" native="true">
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <layout class="QHBoxLayout" name="Layout_Top">
-         <item>
-          <widget class="QToolButton" name="Button_NewTab">
-           <property name="text">
-            <string>New Tab</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="toolButton_Clear"/>
-         </item>
-         <item>
-          <widget class="QToolButton" name="toolButton_2"/>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Expanding</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="margin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QToolButton" name="Button_NewTab">
+         <property name="text">
+          <string>New Tab</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="toolButton_Clear"/>
+       </item>
+       <item>
+        <widget class="QToolButton" name="toolButton_2"/>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>657</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -75,46 +74,7 @@
     <item row="1" column="0">
      <widget class="QTabWidget" name="chat_tabs">
       <property name="styleSheet">
-       <string notr="true">QTabWidget#Modified &gt; QTabBar::tab:top, QTabWidget#Modified &gt; QTabBar::tab:bottom {
-    background: #bababa;
-    border: 1px solid #676a6c;
-    border-radius: 5px;
-    height: 23px;
-    min-width: 90px;
-    padding: 2px;
-}
-
-QTabWidget#Modified  &gt; QTabBar::tab::title {
-    font-weight:bold;
-    font-family:Trebuchet MS;
-    font-size: 14px;
-}
-
-QTabWidget#Modified &gt; QTabBar::tab:hover{
-    border-color: #077cff;
-    color: white;
-    background: #88bcf1;
-}
-
-QTabWidget#Modified &gt; QTabBar::tab:selected {
-    border-color: #077cff;
-    color: white;
-    background: #66ace1;
-}
-
-QTabWidget#Modified &gt; QTabBar::tab:top:selected , QTabWidget#Modified &gt; QTabBar::tab:bottom:selected {
-    /* expand/overlap to the left and right by 4px */
-    margin-left: -2px;
-    margin-right: -2px;
-}
-
-QTabWidget#Modified &gt; QTabBar::tab:top:first,QTabWidget#Modified &gt; QTabBar::tab:bottom:first {
-    margin-left: 15px;
-}
-
-QTabWidget#Modified &gt; QTabBar::tab:top:last, QTabWidget#Modified &gt; QTabBar::tab:bottom:last {
-    margin-right: 0px;
-}</string>
+       <string notr="true"/>
       </property>
       <property name="tabPosition">
        <enum>QTabWidget::South</enum>
@@ -138,6 +98,17 @@ QTabWidget#Modified &gt; QTabBar::tab:top:last, QTabWidget#Modified &gt; QTabBar
     </item>
    </layout>
   </widget>
+  <action name="action_SwitchMiniStyle">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Mini Style</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

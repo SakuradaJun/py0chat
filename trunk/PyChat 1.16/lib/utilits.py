@@ -1,13 +1,28 @@
 #-*-coding: utf-8 -*-
 '''
 Created on 03.03.2011
-
 @author: anon
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+   
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+   
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
 '''
-from PyQt4 import QtCore
+
 from sys import platform
-from PyQt4 import QtGui
-import re, os
+import re, os, time
+from PyQt4 import QtCore,QtGui
+
 reCompile_ImagesThumd_F = re.compile('(<a href="(http://.*(\.png|\.jpg|\.jpeg|\.gif))".*>.*</a>)')
 reCompile_ImagesRGHostRe_F = re.compile('(http\:\/\/rghost\.ru\/(\d+)\.view)')
 #reCompile_ImagesRGHostRe_R = re.compile('http:\/\/rghost\.ru\/\\1\.\\2')
@@ -15,19 +30,44 @@ reCompile_ImagesRGHostRe_F = re.compile('(http\:\/\/rghost\.ru\/(\d+)\.view)')
 #if result:
 #    print result.groups()
 #sys.exit()
+def timeit(method):
+
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+
+        #print '%r (%r, %r) %2.2f sec' % \
+        #      (method.__name__, args, kw, te-ts)
+        print '%r %2.2f sec ' % \
+             (method.__name__,te-ts)
+        return result
+
+    return timed
 
 class class_WebKitStyle():
     
     setyleDirPath = os.path.abspath('res/style/webkitstyle')+'/'
     TemplateFilePath = 'Template.html'
-    
+    '''
+    font_chat_message: !!python/tuple [sans, 14]
+    font_main_wondow: !!python/tuple [Droid Sans, 9]
+    font_text_input: !!python/tuple [Droid Sans, 14]
+    '''
     #variantPath = 'Variants/Medium.css'
     #variantPath = 'Variants/Small.css'
-    variantFilePath = 'Variants/Big.css'
+    #variantFilePath = 'Variants/Big.css'
+    variantFilePath = 'Variants/Custom_font.css'
     
     baseStyleFilePath = 'base.css'
     mainCommon_FilePath = '../main_common.css'
     
+    def getAppStyle(self,file='res/style/style/qutim.qss'):
+        path_to_style = QtCore.QUrl().fromLocalFile(QtCore.QString(os.path.abspath(file))).toString()
+        data_style = ReadFile(file).replace('%path%',path_to_style)
+        return data_style
+        
+        
     def Build(self):
         templateHtml = ReadFile(self.setyleDirPath + self.TemplateFilePath)
         Data_BaseStyle = ReadFile(self.setyleDirPath + self.mainCommon_FilePath)
@@ -59,8 +99,8 @@ class MessageBox(QtGui.QMessageBox):
     
     def __init__(self,text = "Message Here",title = u'Сообщение:',type = QtGui.QMessageBox.NoIcon):
         super(QtGui.QMessageBox, self).__init__(None)
-        text = QString.fromUtf8(str(text))
-        title = QString.fromUtf8(str(title))
+        text = QtCore.QString.fromUtf8(str(text))
+        title = QtCore.QString.fromUtf8(str(title))
         self.setText(text)
         #self.setIcon(QtGui.QMessageBox.Information); 
         self.setIcon(type); 
@@ -70,7 +110,7 @@ class MessageBox(QtGui.QMessageBox):
         
 def qStringToStr(s):
     try:
-        if False: s = QString()
+        if False: s = QtCore.QString()
         #s = unicode(s) #.encode('utf-8')
         #s = str(s.toUtf8()).decode('utf-8')
         s = str(s.toUtf8()).decode('utf-8')
@@ -128,11 +168,11 @@ class Debug_class():
             print m,
             
     def debug(self,s,color=None):
-		s = '# [Debug]: %s' % (s)
-		if platform == 'win32' or color == None: 
-			print s
-		else:
-			print color+s+self.END
-		
+        s = '# [Debug]: %s' % (s)
+        if platform == 'win32' or color == None: 
+            print s
+        else:
+            print color+s+self.END
+
 Debug = Debug_class()
 WebKitStyle = class_WebKitStyle()

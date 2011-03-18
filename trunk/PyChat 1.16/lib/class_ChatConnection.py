@@ -1,9 +1,24 @@
 #-*-coding: utf-8 -*-
 '''
 Created on 05.03.2011
-
 @author: anon
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+   
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+   
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
 '''
+
 from PyQt4 import QtCore
 from PyQt4.QtCore import QString
 
@@ -25,6 +40,7 @@ cmd_description = {
     '\x05':'Капча',
     '\x07':'Успешная авторизация'
 }
+RE_SEARCH_POST_NUM = re.compile('<a href=\"event\:insert\,(\d+)\">')
 
 class ChatConnection(QtCore.QThread):
     obj_mainwin = None
@@ -42,7 +58,8 @@ class ChatConnection(QtCore.QThread):
     SocketActive = False
     StopMainWhile = False
     PacketCounterMSG = 0
-        
+    GET_GETTER = [12345,'**【питон-кун】　{get_post_id} Гет! ._.**']
+    
     def __init__(self,obj_mainwin,obj_tab):
         print 'Create object ChatConnection %s' % (self)
         QtCore.QThread.__init__(self, obj_tab)
@@ -72,33 +89,12 @@ class ChatConnection(QtCore.QThread):
 
     def __del__(self):
         Debug.info('\033[91mMainQThread __DEL__\033[0m')
-        #self.CurentToken = False
-        #if hasattr(self, 'socket_o'): self.socket_o.close()
-        #self.wait()
-        #if hasattr(self, 'socket_o'): 
-        #    self.socket_o.close()
-        #    del self.socket_o
-        #self.terminate()
-        
         #self.emit(QtCore.SIGNAL("thread_is_die()"))
     
     def run(self):
 
         while self.StopMainWhile == False and self.start_conn() : pass
         Debug.info("STOP THREAD, quit main while.")
-        ##self.sendDisconnectSignal()
-        #self.wait()
-        ##self.terminate()
-        #del self.mainWin_obj.Threads_dic[self.self_id_in_dic]
-        #return
-        #self.offSocket()
-        #self.sendDisconnectSignal()
-        #self.terminate()
-        #del self.mainWin_obj.Threads_dic[self.self_id_in_dic]
-        ##self.emit(QtCore.SIGNAL('conn_del()'))
-        #self.wait()
-
-        ###self.stop()
         self.emit(QtCore.SIGNAL('conn_del()'))
         self.deleteLater()
         del self.obj_tab.obj_conn
@@ -128,39 +124,11 @@ class ChatConnection(QtCore.QThread):
         return False
     
     def stop(self):
-        #return
-        ###print "Stop в %s" % (self.obj_tab.tab_GetName())
-        
         self.StopMainWhile = True
-        #self.socket_o.settimeout(1)
-        #self.socket_o.close()
-        
-        self.offSocket()
-        #self.offSocket()
-        #del self.mainWin_obj.Threads_dic[self.self_id_in_dic]
-        
-    def sendDisconnectSignal(self):
-        self.emit(QtCore.SIGNAL("DisconnectUpdateGUI()"))
-        self.emit(QtCore.SIGNAL("HideCaptcha(QString)"), '')
-        self.emit(QtCore.SIGNAL("output_chat(QString)"), '<font color="#800000">Disconnected</font>')
-        
-    def offSocket(self):
         if hasattr(self, 'socket_o'): 
-            try:
-                #self.socket_o.setblocking(False)
-                #self.socket_o.settimeout(0.00001)
-                #self.socket_o.shutdown()
-                #return
-                self.socket_o.shutdown(socket.SHUT_RD)
-                self.socket_o.close()
-                return
-                self.socket_o.shutdown(1)
-                self.socket_o.shutdown(2)
-                #self.socket_o.close()
-                #del self.socket_o
-            except Exception,err:
-                Debug.err(err)
-            
+            self.socket_o.shutdown(socket.SHUT_RD)
+            self.socket_o.close()
+                    
     def GetToken(self):
         if self.UseCacheToken:
             tok_c = CacheToken(self.chat_host).get()
@@ -238,30 +206,16 @@ class ChatConnection(QtCore.QThread):
                 cmd = recv_tmp[2:3] # Тут будет тип сообщения (тип комманды)
             else:
                 return AOUTOR_ERROR
-                #print "recv_tmp: %s" % (recv_tmp.encode("hex"))
                 self.PrintGui('<font color="#800000">Ошибка: recv_tmp содержит мение 3 байт!</font>')
-                #self.printLog("# Ошибка: Произошла ошибка при приеме данных.")
-                #self.PrintGui('<font color="#800000">Ошибка: Произошла ошибка при приеме данных.</font>')
                 return False
 
             if data_size:
-                #self.emit(QtCore.SIGNAL("setDownRange(int)"), int(data_size))
                 pass
             while len(data) < data_size:
-                    #data = self.socket_o.recv(data_size)
                     add_size = data_size-len(data)
                     data += self.socket_o.recv(add_size)
-                    #data += self.socket_o.recv(add_size)
-                    #self.emit(QtCore.SIGNAL("setDownVal(int)"), len(data))
-            #self.emit(QtCore.SIGNAL("setDownVal(int)"), len(data))
                 
         except Exception, err:
-            '''
-            if err.errno == 11:
-                return True
-            else:
-                return False
-            '''
             str_error = str(err)
             Debug.err("%s" % (str_error))
             self.PrintGui('<font color="#800000">Error: %s</font>' % (str_error) )
@@ -274,10 +228,9 @@ class ChatConnection(QtCore.QThread):
             # 1 - сообщение чата
             if cmd == "\x01":
                 self.PacketCounterMSG +=1
-                #f = open('msg_dumb.dat','ab+');f.write(data);f.close()
-                #print "\033[95m%s\033[0m" % (data)
-                #data = ParsePost(data)
-                #data = Parser_IN(data)
+                self.GetGetter(data)
+                        
+                #Debug.debug('Принято: %s' % (data),Debug.OKBLUE)
                 self.emit(QtCore.SIGNAL("conn_msg_chat(QString)"),QString.fromUtf8(data))
                 return True
             
@@ -296,7 +249,7 @@ class ChatConnection(QtCore.QThread):
             
             # 4 - Радио
             if cmd == "\x04":
-                self.emit(QtCore.SIGNAL("RadioSetText(QString)"), QString.fromUtf8(data))
+                self.emit(QtCore.SIGNAL("conn_radio_stat(QString)"), QString.fromUtf8(data))
                 return True
                 
             # 5 - верификация (КАПЧА)  
@@ -327,18 +280,41 @@ class ChatConnection(QtCore.QThread):
             return True
         
     def writeSocket(self,data):
-        Debug.debug('Отправка: %s' % (data))
+        if not hasattr(self, 'socket_o'): return  False
+        Debug.debug('Отправка[len: %s]: %s' % (len(data),data))
+        data_sended = 0
+        
         try:
-            self.socket_o.send(data)
+            data_sended += self.socket_o.send(data)
+            if data_sended != len(data):
+                self.PrintGui( 'Ошибка отправки: отправленно %s байт из %s байт' %  (data_sended,len(data)) )
+
+                return False
+            #while data_sended <= len(data):
+            #    #add_size = data_size-len(data)
+            #    data_sended += self.socket_o.send(data)
+            #    print 'sended %s size %s' % (data_sended, len(data))
         except socket.error, err:
             print str(err)
+            self.PrintGui(str(err))
             return False
         return True
-        
+    def GetGetter(self,data):
+        re_result = RE_SEARCH_POST_NUM.search(data)
+        if re_result:
+            try:
+                id = int(re_result.groups(1)[0])
+                
+                if id == (self.GET_GETTER[0]-1):
+                    self.writeSocket(self.GET_GETTER[1].replace('{get_post_id}',str(self.GET_GETTER[0])))
+                    
+            except Exception,err:
+                print str(err)
+
     def PrintGui(self,text):
         self.emit(QtCore.SIGNAL("conn_msg_sys(QString)"), QString.fromUtf8(text))
         return text
-        
+
     def printLog(self,str,print_n = False):
         if True:
             if print_n == False:

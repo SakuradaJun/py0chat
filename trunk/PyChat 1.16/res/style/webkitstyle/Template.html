@@ -2,17 +2,14 @@
 <html>
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-	<base href="file://localhost/home/anon/workspace_eclipse_PyDev/PyChat_1.16_(dbg,plugin)/src/res/style/webkitstyle/Template.html">
+	<base href="%@">
 	<script type="text/ecmascript" defer="defer">
-		function goToMark(url)
-		{
-			//alert('p_'+url);
-			document.anchors['p_'+url].focus();
-			//document.location.href
-			//document.links[Sel.ListOfLinks.selectedIndex];
-			return false;
-		}
-
+		/*<Change>*/
+			function goToMark(url)
+			{
+				document.anchors['p_'+url].focus();
+			}
+		/*</Change>*/
 		function messageDlvrd(message_id)
 		{
 		  var shouldScroll = nearBottom();
@@ -36,12 +33,10 @@
 		function appendMessage(html) {
 			var shouldScroll = nearBottom();
 		
-			
 			//Remove any existing insertion point
 			var insert = document.getElementById("insert");
 			if(insert) 
 				insert.parentNode.removeChild(insert);
-			
 
 			//Append the new message to the bottom of our chat block
 			var chat = document.getElementById("Chat");
@@ -187,120 +182,28 @@
 	</script>
 	
 	<style type="text/css">
-		.image_thumb_re {
-			//background-color: #FFFFA0;
-			fload: right;
-			//border: 1px solid black;
-		}
-		a {
-			text-decoration: none;
-		}
-		
-		.msgNum {
-			color: #3366ff;
-			font-family: Trebuchet MS,sans; 
-		}
-
-		.my { 
-			color : red; 
-		} 
-		
-		.reply {
-			color: #ff6600;
-		} 
-
 		.actionMessageUserName { display:none; }
 		.actionMessageBody:before { content:"*"; }
 		.actionMessageBody:after { content:"*"; }
 		*{ word-wrap:break-word; }
 		img.scaledToFitImage { height:auto; width:100%; }
-		
 	</style>
 	
 	<!-- This style is shared by all variants. !-->
 	<style id="baseStyle" type="text/css" media="screen,print">	
-		@-webkit-keyframes highlight {
-		0% {
-				background-color: #FFFFA0;
-		}
-
-		33% {
-				background-color: #FFFFA0;
-		}	
-		100% {
-				background-color: white;
-		}
-		}
-
-		body {
-			background: url('Images/background.png') repeat;
-		}
-
-		.replico {
-			margin-bottom: 1em;
-		}
-
-		.inContact, .outContact, .inActionContact, .outActionContact {
-			font-weight: bold;
-		}
-
-		.inContentTime, .outContentTime, .statusTime, .statusMessage {
-			font-size: smaller;
-		}
-
-		.inContact, .inContentTime {
-			color: red;
-		}
-
-		.outContact, .outContentTime {
-			color: blue;
-		}
-
-		.inActionContact, .inActionMessage, .outActionContact, .outActionMessage {
-			color: green;
-		}
-
-		.statusMessage, .statusTime {
-			color: gray;
-		}
-
-
-		.m_highlight {
-			-webkit-animation-name: highlight;
-			-webkit-animation-duration: 1.2s;
-			-webkit-animation-iteration-count: 1;
-			-webkit-animation-timing-function: linear;
-		}
-
-		.m_sending {
-			border-left: 2pt solid #FFFFA0;
-			padding-left: 4pt;
-		}
-
-		.m_sended {
-			border-left: 2pt solid #A0FFA0;
-			padding-left: 4pt;
-		}
-
-		.m_received {
-			border-left: 2pt solid #FFFFA0;
-			padding-left: 4pt;
-		}
+		%@
 	</style>
 	
 	<!-- Although we call this mainStyle for legacy reasons, it's actually the variant style !-->
 	<style id="mainStyle" type="text/css" media="screen,print">	
-		@import url( "Variants/Big.css" );
+		@import url( "%@" );
 	</style>
 
 </head>
 <body onload="alignChat(true);" style="==bodyBackground==">
-<!-- <img src="http://2ip.ru/sbar/2ip1.gif"/>
-file://localhost/home/anon/workspace_eclipse_PyDev/PyChat_1.16_(dbg,plugin)/src/res/style/webkitstyle/Images/action.png
-<img src="Images/action.png"/>
-%@ -->
+%@
 <div id="Chat">
 </div>
-<!-- %@ -->
+%@
 </body>
 </html>

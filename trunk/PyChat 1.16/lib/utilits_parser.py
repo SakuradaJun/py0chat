@@ -1,9 +1,25 @@
 #-*-coding: utf-8 -*-
 '''
 Created on 07.03.2011
-
 @author: anon
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+   
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+   
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
 '''
+
+
 import re
 from lib.utilits import *
 
@@ -33,7 +49,13 @@ def ParsePost(post_message):
         return post_message
     #f = open('msg_dumb.dat','ab+');f.write(data);f.close()
     #parent = '.*\[(?P<time>[\d:]*)\] <b>&lt;<a href="event:insert,(?P<post_num>\d+)"><font color="#000000">\d+</font></a></b><b>&gt;</b>(?P<message>.*)(\n|\r\n|<br/>|<br />|)'
-    parent = '.*\[(?P<time>[\d:]*)\] <b>&lt;<a href="event:insert,(?P<post_num>\d+)"><font color="#000000">\d+</font></a></b><b>&gt;</b>(?P<message>.*)(<br />|.*)'
+    post_message_s = post_message.split('<br />')
+    if type(post_message_s) == list and len(post_message_s) > 1:
+        return post_message
+    del post_message_s
+    
+    parent = '.*\[(?P<time>[\d:]*)\] <b>&lt;<a href="event:insert,(?P<post_num>\d+)"><font color="#[a-f0-9]+">\d+</font></a></b><b>&gt;</b>(?P<message>.*)(<br />|.*)'
+    #parent = '.*\[(?P<time>[\d:]*)\] <b>&lt;<a href="event:insert,(?P<post_num>\d+)"><font color="#000000">\d+</font></a></b><b>&gt;</b>(?P<message>.*)(<br />|\r\n|\n|.*)'
     #'[22:02:11] <b>&lt;<a href="event:insert,2677309"><font color="#000000">2677309</font></a></b><b>&gt;</b> &lt;<i><b>Angrybot</b></i>&gt; От нас ушла одна няша — помашем вслед платочком!'
     result = re.match(parent,post_message)#re.U 
     if result:

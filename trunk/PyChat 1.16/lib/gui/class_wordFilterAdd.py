@@ -1,6 +1,6 @@
 #-*-coding: utf-8 -*-
 '''
-Created on 05.03.2011
+Created on 09.03.2011
 @author: anon
 
     This program is free software; you can redistribute it and/or modify
@@ -18,3 +18,14 @@ Created on 05.03.2011
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
     MA 02110-1301, USA.
 '''
+from lib.utilits import *
+from lib.utilits_parser import *
+from PyQt4 import QtCore, QtGui, uic
+
+class WordFilterAdd_Widget(QtGui.QDialog):
+
+    def __init__(self,parent=None):
+        QtGui.QDialog.__init__(self)
+        uic.loadUi('res/word_filter_add.ui',self)
+        self.show()
+        

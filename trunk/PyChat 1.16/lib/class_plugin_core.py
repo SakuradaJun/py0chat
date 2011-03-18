@@ -1,15 +1,27 @@
 #-*-coding: utf-8 -*-
 '''
 Created on 05.03.2011
-
 @author: anon
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+   
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+   
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+	MA 02110-1301, USA.
 '''
 
 import os
 import sys
 from lib.utilits import *
-# Экземпляры загруженных плагинов
-Plugins = []
 
 # Базовый класс плагина
 class Plugin(object):
@@ -26,6 +38,8 @@ class Plugin(object):
 
 class PluginHandler(object):
 	events = {}
+	Plugins = [] # Экземпляры загруженных плагинов
+	
 	def __init__(self):
 		ev = {'test':[self.Event]}
 	
@@ -67,12 +81,8 @@ class PluginHandler(object):
 		#print Plugin.__subclasses__()
 		for plugin in Plugin.__subclasses__(): # так как Plugin произведен от object, мы используем __subclasses__, чтобы найти все плагины, произведенные от этого класса
 			p = plugin() # Создаем экземпляр
-			Plugins.append(p)
+			self.Plugins.append(p)
 			Debug.info('Load Plugin: %s v%s' % (p.Name, p.Version))
 			p.OnLoad(Window_Main,self) # Вызываем событие загруки этого плагина
 	
 		return
-
-def Plugin_CMD(argv):
-		for p in Plugins:
-			p.OnCommand(argv)

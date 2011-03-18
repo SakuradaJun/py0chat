@@ -1,29 +1,41 @@
 #!/usr/bin/python
-#-*-coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 '''
-Created on 02.03.2011
+Created on 02.03.2011 
+@author: anon <index4376867067@yandex.ru>
 
-@author: anon
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+   
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+   
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1301, USA.
 '''
-#pyrcc4 -o resources.py resources.qrc
-from lib.utilits import *
+#Create pyrc: pyrcc4 -o resources.py resources.qrc
+
 CONF_O = None
 P = None
 GLOBAL_VARS={'window_title':'PyChat 1.16 (dbg,plugin)'}
 
-#try:
+import gc
+gc.enable()
+#gc.set_debug(gc.DEBUG_STATS)
 import sys
 import os
 from PyQt4 import QtCore, QtGui, uic
-#import pysideuic
+from lib.utilits import *
 from lib.class_Config import Config
 from lib.class_plugin_core import PluginHandler
 from lib.class_ChatConnection import ChatConnection
 from lib.gui.class_tab_connection import TAB_Connection
-from lib.gui.class_word_filter import WordFilter_Widget
-#except Exception,err:
-    #print str(err)
-    #sys.exit()
 #TODO: Проверка новых версий svn на гугле файл
 '''
  >>32056 Вордфильтр, удобный, с возможностью выделить слово и внести его туда, Ня!=^_^=. 
@@ -38,87 +50,81 @@ from lib.gui.class_word_filter import WordFilter_Widget
 
 class Chat(QtGui.QMainWindow):
     
-    paths = {'config_dir':'./'}
+    paths = {'config_dir':os.path.abspath('./')}
     tabs = []
     icon_new_message = QtGui.QIcon()
     icon_main = QtGui.QIcon()
     icons_conn = []
     
     def __init__(self):
-        self.paths['config_dir'] = script_dir; CONF_O.paths = self.paths
+        super(Chat,self).__init__()        
         self.P = PLUGINH_O
         self.CONF_O = CONF_O
+        self.CONF_O.paths = self.paths
         
-        if False: 
+        if False: # Hack for eclipse IDE 
             self.chat_tabs = QtGui.QTabWidget()
             self.tab_bar = QtGui.QTabBar()
-        super(Chat,self).__init__()
-        uic.loadUi('res/main.ui',self)
             
+        self.SetupUI()
+        
+        self.CONF_O.Load()
+        self.P.LoadPlugins(self)
+        self.CreateTab(1)
+        self.CreateTab(2)
+        
+    def SetupUI(self):
+        uic.loadUi('res/main.ui',self)
         self.icon_new_message.addPixmap(QtGui.QPixmap('res/Images/mail-unread-new.png'), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.icon_main.addPixmap(QtGui.QPixmap('res/Images/icon_16.png'), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(self.icon_main)
         qapp.setWindowIcon(self.icon_main)
         
-        #self.chat_tabs.i
         self.originalPalette = QtGui.QApplication.palette()
-        #self.changeStyle('GTK+')
-        #self.setStyleSheet(ReadFile())
+        #qapp.setStyleSheet(WebKitStyle.getAppStyle())
         
-        #self.chat_tabs.tabBar()
+        
         QtGui.QApplication.setApplicationName(GLOBAL_VARS['window_title'])
         self.setWindowTitle(GLOBAL_VARS['window_title'])
         self.SetUpSignals()
         self.widget_Top.hide()
+        
+        self.action_GetGetter = QtGui.QAction(self)
+        self.action_GetGetter.setText('Get...')
+        self.action_GetGetter.setShortcut("Ctrl+`")
+        def CurrentTabGet_exec():
+            tab_w = self.chat_tabs.currentWidget()
+            if hasattr(tab_w, 'GET'):
+                tab_w.GET()
+
+        self.action_GetGetter.triggered.connect(lambda: self.chat_tabs.currentWidget().GET())
+        #self.chat_tabs.tabBar().addAction(self.action_GetGetter)
+        #self.CreateTrayIcon()
+        self.action_SwitchMiniStyle.triggered.connect(lambda b: self.emit(QtCore.SIGNAL("SwitchMiniStyle(bool)"),b))
+        #self.connect(self, QtCore.SIGNAL("SwitchMiniStyle(bool)"), lambda x='Empty': Debug.debug(x) )
+        
+        self.addAction(self.action_GetGetter)
+        self.addAction(self.action_SwitchMiniStyle)
         self.show()
         
-        self.CONF_O.Load()
-        self.P.LoadPlugins(self)
+    def CreateTrayIcon(self):
+        self.trayIcon = QtGui.QSystemTrayIcon(self.icon_main)
         
+        self.trayIconMenu = QtGui.QMenu(self)
         
-        #self.installEventFilter(self)
-        #print QtGui.QMainWindow.__subclasses__()
+        self.trayIconMenu.addAction(self.action_test)
+        self.trayIconMenu.addAction(self.action_SwitchMiniStyle)
         
-        #self.connect(self.Button_Connect, QtCore.SIGNAL("clicked()"), lambda x=0: Plugin_CMD(('connect','0chan')) )
-        #self.chat_tabs.removeTab(0)
-        #self.chat_tabs.removeTab(0)
-        #self.CreateTab()
-        #self.CreateTab()
-        #self.timer = QtCore.QTimer()
-        #self.timer.start(2300)
-        #self.connect(self.timer, QtCore.SIGNAL("timeout()"), lambda: self.P.Event('chat_message', None) )
-        #self.chat_tabs.changeEvent_OLD = self.chat_tabs.changeEvent
-        #self.CreateTab(1).AddText(u'[20:39:39] <b>&lt;<a href="event:insert,28793"><font color="#000000">28793</font></a></b><b>&gt;</b> Test ТЕСТ')
-        self.CreateTab(1)
-        self.CreateTab(2)
-        #o = WebKitStyle()
-        #print WebKitStyle.Build()
-        
-    def keyReleaseEvent(self,event):
-        if event.key() == QtCore.Qt.Key_F11:
-            self.emit(QtCore.SIGNAL('main_win_miniStyle()'))
-        QtGui.QMainWindow.keyReleaseEvent(self,event)
-        
-    def eventFilter(self,Qobj, event):
-        #TODO: not work: TypeError: invalid result type from Chat.eventFilter()
-        '''If you delete the receiver object in this function, be sure to return true. Otherwise, 
-        Qt will forward the event to the deleted object and the program might crash.'''
-        #return (Qobj, event)
-        #super(Chat,self).eventFilter(Qobj, event)
-        #super(QMainWindow, self).eventFilter(Qobj, event)
-        #return qapp.eventFilter(Qobj, event)
-        #return QtGui.QMainWindow.eventFilter(self,Qobj, event)
-        #return QtCore.QObject.eventFilter(Qobj, event)
-        #return QtGui.QMainWindow.eventFilter(Qobj, event)
-        #return Chat.eventFilter(Qobj, event)
+        self.trayIcon.setContextMenu(self.trayIconMenu)
+        self.trayIcon.show()
         return
-        if Qobj == self and event.type() == QtCore.QEvent.KeyPress:
-            if event.key() in (QtCore.Qt.Key_F11):
-                print 'F11 press'
-                self.emit(QtCore.SIGNAL('main_win_miniStyle()'))
-                return True
+        self.trayIconMenu.addAction(self.maximizeAction)
+        self.trayIconMenu.addAction(self.restoreAction)
+        self.trayIconMenu.addAction(self.action_about)
+        self.trayIconMenu.addSeparator()
+        self.trayIconMenu.addAction(self.quitAction)
+         
         
-    
     def closeEvent(self, event): 
         c = self.chat_tabs.count()
         for x in xrange(0,c):
@@ -126,8 +132,7 @@ class Chat(QtGui.QMainWindow):
         CONF_O.Save(); 
         qapp.quit();
         
-    def WordFilterWindow(self):
-        WordFilter_Widget().exec_()
+    def WordFilterWindow(self): WordFilter_Widget().exec_()
     
     def GET_icons(self):
         icon = QtGui.QIcon()
@@ -136,7 +141,7 @@ class Chat(QtGui.QMainWindow):
         self.setWindowIcon(icon)
         
     def changeStyle(self, styleName, Load = False):
-        QtGui.QApplication.setStyle(QtGui.QStyleFactory.create(styleName))
+        qapp.setStyle(QtGui.QStyleFactory.create(styleName))
         CONF_O.settings['view']['style'] = styleName
         if Load != True:
             self.changePalette()  
@@ -168,16 +173,22 @@ class Chat(QtGui.QMainWindow):
         tab.init_TWO(connIndex,conn_par, self, IsAutoConn)
         #self.tabs.append(tab)
         return tab
-
-    def eventFilter(self,Qobj, event):
-        pass
     
+
 if __name__ == '__main__':
     #os.system('clear')
     script_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
-    os.chdir(script_dir)
-    qapp =  QtGui.QApplication(sys.argv)
-    CONF_O = Config()
-    PLUGINH_O = PluginHandler()
-    Chat_o = Chat()
-    qapp.exec_()
+    os.chdir(script_dir)    
+    if 1:
+        qapp =  QtGui.QApplication(sys.argv)
+        #qapp.setStyle("Plastique")
+        #qapp.setPalette(QtGui.QApplication.style().standardPalette())
+        CONF_O = Config()
+        PLUGINH_O = PluginHandler()
+        Chat_o = Chat()
+    else:
+        wf_o = WordFiler_DotNET()
+        wf_o.load()
+        print wf_o.FilterMessage('Test Ня?=^_^= test')
+        sys.exit()
+    sys.exit(qapp.exec_())
