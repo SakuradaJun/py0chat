@@ -21,6 +21,7 @@ Created on 05.03.2011
 
 import os
 import sys
+import thread
 from lib.utilits import *
 
 # Базовый класс плагина
@@ -55,7 +56,7 @@ class PluginHandler(object):
 			#print 'Event: %s **args: %s ' % (event,args)
 			for func in self.events[event]:
 				#print 'Call: %s' % (func)
-				func(argv)
+				thread.start_new_thread(func, (argv,) )
 		else:
 			#Debug.err('Нет события для %s' % (event))
 			pass

@@ -106,6 +106,10 @@ class TAB_Connection(TAB):
         self.WEB_page.setLinkDelegationPolicy(self.WEB_page.DelegateAllLinks)
         self.Message_Webkit.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.connect(self.Message_Webkit, QtCore.SIGNAL('customContextMenuRequested ( const QPoint & )'), lambda p: self.Message_Webkit_MenuRequested(p,self.Message_Webkit))
+        
+        self.Input.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.connect(self.Input, QtCore.SIGNAL('customContextMenuRequested ( const QPoint & )'), lambda p: self.Input_MenuRequested(p,self.Input))
+        
         self.font_Input = QtGui.QFont()
         self.font_Input.setFamily("Droid Sans")
         self.font_Input.setPointSize(14)
@@ -143,10 +147,27 @@ class TAB_Connection(TAB):
         self.installEventFilter(self)  
         #self.WEB_page.installEventFilter(self)
         #self.Message_Webkit.installEventFilter(self)
+    def InputPasteText(self,text):
+        self.Input.insertPlainText(QtCore.QString().fromUtf8(text))
+                                   
+    def Input_MenuRequested(self,point,obj):
+        Menu = QtGui.QMenu(self)
+        Menu_def = obj.createStandardContextMenu()
         
-    def MessagesClear(self):
-        s = QtCore.QString("document.getElementById('Chat').innerHTML = ''")
-        self.WEB_page.mainFrame().evaluateJavaScript(s)
+        def PasteClipboardText():
+            self.InputPasteText('*>'+QtGui.QApplication.clipboard().text()+'* //')
+        i = 1
+        for def_action in  Menu_def.actions():
+            if i == 9: 
+                    action_paste = QtGui.QAction(u'Вставить-цит.', 
+                                                 self, triggered = PasteClipboardText)
+                    if not str(QtGui.QApplication.clipboard().text()): action_paste.setDisabled(True)
+                    Menu.addAction(action_paste)
+            Menu.addAction(def_action)
+            i += 1
+        Menu.exec_(self.Input.mapToGlobal(point) )
+        
+    def MessagesClear(self): self.WEB_page.mainFrame().evaluateJavaScript(QtCore.QString("document.getElementById('Chat').innerHTML = ''"))
                 
     def Message_Webkit_MenuRequested(self,point,obj=None):
         #print  point,obj
@@ -167,6 +188,7 @@ class TAB_Connection(TAB):
         DefaultMenu = self.WEB_page.createStandardContextMenu()
         DefActionsQList = DefaultMenu.actions()
         for def_action in DefActionsQList:
+            if def_action.text() == 'Reload': continue
             Menu.addAction(def_action)
         
         self.AddMainMenuActions(Menu)
@@ -352,6 +374,7 @@ class TAB_Connection(TAB):
         result = self.obj_conn.writeSocket(unicode(self.lineEdit_Captcha.text()).encode('utf-8'))
     
     def Captcha_View(self,img_data = None):
+        self.obj_mainWin.qapp.alert(self,0)
         image = QtGui.QPixmap()
         image.loadFromData(self.obj_mainWin.CONF_O.DATA_CAPTCHA)
         #width = image.width()height = image.height()

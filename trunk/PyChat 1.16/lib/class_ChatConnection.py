@@ -281,6 +281,8 @@ class ChatConnection(QtCore.QThread):
         
     def writeSocket(self,data):
         if not hasattr(self, 'socket_o'): return  False
+        data = data.replace('\r\n',' ')
+        data = data.replace('\n',' ')
         Debug.debug('Отправка[len: %s]: %s' % (len(data),data))
         data_sended = 0
         
@@ -299,6 +301,7 @@ class ChatConnection(QtCore.QThread):
             self.PrintGui(str(err))
             return False
         return True
+        
     def GetGetter(self,data):
         re_result = RE_SEARCH_POST_NUM.search(data)
         if re_result:

@@ -55,10 +55,12 @@ class Chat(QtGui.QMainWindow):
     icon_new_message = QtGui.QIcon()
     icon_main = QtGui.QIcon()
     icons_conn = []
+    qapp = None
     
     def __init__(self):
         super(Chat,self).__init__()        
         self.P = PLUGINH_O
+        self.qapp = qapp
         self.CONF_O = CONF_O
         self.CONF_O.paths = self.paths
         
