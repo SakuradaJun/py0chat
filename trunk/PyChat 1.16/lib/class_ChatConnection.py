@@ -19,15 +19,16 @@ Created on 05.03.2011
     MA 02110-1301, USA.
 '''
 
+from __builtin__ import G
 from PyQt4 import QtCore
-from PyQt4.QtCore import QString
+#from PyQt4.QtCore import QString
 
-from urllib2 import urlopen
+import urllib2
 import socket, re, yaml, os, time
 from struct import unpack
 from lib.utilits import *
 from lib.class_CacheToken import CacheToken
-
+import binascii
 #from tabnanny import Debug.errrint
 #from PostParser import *
 #import captcha_breaker
@@ -47,7 +48,7 @@ class ChatConnection(QtCore.QThread):
     obj_tab = None
     conf_o = None
     printConsoleLog = True
-    UseCacheToken = True
+    UseCacheToken = False
     UseCaptchaBreaker = False
     NameFagInterator = 0
     
@@ -61,20 +62,19 @@ class ChatConnection(QtCore.QThread):
     GET_GETTER = [12345,'**【питон-кун】　{get_post_id} Гет! ._.**']
     
     def __init__(self,obj_mainwin,obj_tab):
-        print 'Create object ChatConnection %s' % (self)
         QtCore.QThread.__init__(self, obj_tab)
         if False: self.socket_o = socket.socket()
-        self.obj_mainwin = obj_mainwin
-        self.conf_o = self.obj_mainwin.CONF_O
         self.obj_tab = obj_tab
         self.cmd_description = cmd_description
 
     # Установка настроек
     def Set_Vars(self):
-        self.admin_key = self.conf_o.settings['admin_pass']
-        #self.chat_port = self.conf_o.settings['servers'][self.conf_o.settings['current_server']]['port']
-        #self.chat_host = self.conf_o.settings['servers'][self.conf_o.settings['current_server']]['host']
-        #self.chat_token_page = self.conf_o.settings['servers'][self.conf_o.settings['current_server']]['token_page']
+        if self.chat_host == 'py-chat.tk':
+            self.UseCacheToken = False
+        self.admin_key = G['config'].settings['admin_pass']
+        #self.chat_port = G['config'].settings['servers'][G['config'].settings['current_server']]['port']
+        #self.chat_host = G['config'].settings['servers'][G['config'].settings['current_server']]['host']
+        #self.chat_token_page = G['config'].settings['servers'][G['config'].settings['current_server']]['token_page']
 
         # Thread settings
         self.cpatcha_enter = False
@@ -94,6 +94,7 @@ class ChatConnection(QtCore.QThread):
     def run(self):
 
         while self.StopMainWhile == False and self.start_conn() : pass
+        self.PrintGui('<font color="#800000">Disconnected.</font>')
         Debug.info("STOP THREAD, quit main while.")
         self.emit(QtCore.SIGNAL('conn_del()'))
         self.deleteLater()
@@ -117,6 +118,8 @@ class ChatConnection(QtCore.QThread):
                     else:
                         self.socket_o.close()
                         break
+            if self.chat_host == 'py-chat.tk':
+                return True
             #self.quit()
         except KeyboardInterrupt:
             Debug.info("Exit by Keyboard Interrupt")
@@ -126,8 +129,13 @@ class ChatConnection(QtCore.QThread):
     def stop(self):
         self.StopMainWhile = True
         if hasattr(self, 'socket_o'): 
-            self.socket_o.shutdown(socket.SHUT_RD)
-            self.socket_o.close()
+            try:
+                self.socket_o.shutdown(socket.SHUT_RD)
+                self.socket_o.close()
+            except Exception , e:
+                Debug.warr(e)
+                self.PrintGui('<font color="#800000">%s</font>' % (e))
+                return False
                     
     def GetToken(self):
         if self.UseCacheToken:
@@ -142,9 +150,11 @@ class ChatConnection(QtCore.QThread):
         Debug.info('Get token from: %s' % (self.chat_token_page))
         self.PrintGui('<font color="#0000ff">Get token...</font>')
         try:
-            self.CurentToken = re.compile('token=([a-zA-Z0-9]{32})').search(urlopen(self.chat_token_page).read()).group(1)
-        except Exception, err:
-            self.PrintGui('<font color="#800000">Get token error.</font>')
+            #data = urllib.request.urlopen(self.chat_token_page).read()
+            data = urllib2.urlopen(self.chat_token_page).read()
+            self.CurentToken = re.compile('token=([a-zA-Z0-9]{32})').search(data).group(1)
+        except Exception , err:
+            self.PrintGui('<font color="#800000">Get token error: %s</font>' % (err))
             Debug.err('Get token error, '+str(err))
             return False
         if self.UseCacheToken: 
@@ -156,46 +166,53 @@ class ChatConnection(QtCore.QThread):
         # Connecting
         self.PrintGui('<font color="#0000ff">Connecting...</font>')
         Debug.info('Connecting...')
+        
         try:
             self.socket_o.connect( (self.chat_host, self.chat_port) )
             self.SocketActive = True
-        except Exception, err_msg:
+        except Exception , err:
             #self.printLog("Error: Can\'t connect to server.")
-            self.printLog("Error: %s" % (str(err_msg)))
-            self.PrintGui('<font color="#800000">Error: %s</font>' % (str(err_msg)))
+            self.printLog("Error: %s" % err)
+            self.PrintGui('<font color="#800000">Error: %s</font>' % err)
             return False
         self.PrintGui('<font color="#0000ff">Connected.</font>')
         Debug.info('Connected.')
         # Handshaked
         Debug.info("Handshaked...")
         self.PrintGui('<font color="#0000ff">Handshaked...</font>')
-        try:
-            self.writeSocket('<handshake version=4 token=%s/>' % (self.CurentToken))
-        except:
-            Debug.err("Socket error send")
-            self.PrintGui('<font color="#800000">Socket error send</font>')
+        
+        if not self.writeSocket('<handshake version=4 token=%s/>' % self.CurentToken):
             return False
+        else:
+            return True
+        '''
+        except Exception , err:
+            Debug.err("Socket write error: %s" % err)
+            self.PrintGui('<font color="#800000">Socket write error: %s</font>' % err)
+            return False
+        '''
             
     # Create socket 
     def SetUpSocket(self):
         
         try:
             self.socket_o = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except socket.error, err_msg:
+        except socket.error ,  err:
             Debug.err("Create socket error.")
-            self.PrintGui('<font color="#800000">Create socket error: %s</font>' % (err_msg))
+            self.PrintGui('<font color="#800000">Create socket error: %s</font>' % (err))
             self.stop()
         
     def MainWhile(self):
         # Комманды: 1 - сообщение чата, 2 - число онлайн, 3 - ошибка, 4 - заголовок с радио, 5 - верификация 
         # Первыеее 2 байта это размер, а последующий 1 байт тип комманды
-        cmd = ''
+        cmd = b''
         data_size = 0
-        data = ''
+        data = b''
         
         try:
             #TODO: Проверка соединения с чятом. (Для линукс систем больше это скорее всего)
             recv_tmp =  self.socket_o.recv(3)
+            if len(recv_tmp) < 1: return False
             if self.StopMainWhile: return False
             if recv_tmp is None:
                 self.PrintGui('<font color="#800000">Ошибка: переменная recv_tmp равна none type.</font>')
@@ -208,71 +225,83 @@ class ChatConnection(QtCore.QThread):
                 return AOUTOR_ERROR
                 self.PrintGui('<font color="#800000">Ошибка: recv_tmp содержит мение 3 байт!</font>')
                 return False
-
+            
             if data_size:
                 pass
             while len(data) < data_size:
                     add_size = data_size-len(data)
                     data += self.socket_o.recv(add_size)
                 
-        except Exception, err:
+        except Exception , err:
             str_error = str(err)
             Debug.err("%s" % (str_error))
             self.PrintGui('<font color="#800000">Error: %s</font>' % (str_error) )
             self.SocketActive = False
             return False
+        #bytes(data,'UTF-8')
+        #s_tmp = recv_tmp
+        #s_tmp += data
+        #Debug.info(binascii.hexlify(s_tmp))
+        try:
+            data = data #.encode('utf8')
+        except Exception , e:
+            data = ''
+            self.PrintGui('<font color="#800000">Decode data to string error[cmd %s]: %s</font>' % (cmd,e))
+        
+        
         
         if cmd:
             #! self.printLog("# Recv cmd: %s (Тип: %s): Size: %s" % (cmd.encode("hex"), self.cmd_description[cmd], data_size) )
             
             # 1 - сообщение чата
-            if cmd == "\x01":
+            if cmd == b"\x01":
                 self.PacketCounterMSG +=1
                 self.GetGetter(data)
                         
                 #Debug.debug('Принято: %s' % (data),Debug.OKBLUE)
-                self.emit(QtCore.SIGNAL("conn_msg_chat(QString)"),QString.fromUtf8(data))
+                self.emit(QtCore.SIGNAL("conn_msg_chat(QString)"),QtCore.QString.fromUtf8(data))#
                 return True
             
             # 2 - число онлайн
-            if cmd == "\x02":
+            if cmd == b"\x02":
                 self.emit(QtCore.SIGNAL("conn_online_users(int)"), (int(data)))
                 return True
             
             # 3 Ошибка
-            if cmd == "\x03":
+            if cmd == b"\x03":
                 Debug.err(" Server err msg: %s" % (data))
-                self.emit(QtCore.SIGNAL("conn_msg_chat_err(QString)"), QString.fromUtf8(data))
+                #self.emit(QtCore.SIGNAL("conn_msg_chat_err(QString)"), data)#
+                self.emit(QtCore.SIGNAL("conn_msg_chat_err(QString)"), 
+                          QtCore.QString.fromUtf8(data))
                 self.stop()
                 return False
                 
             
             # 4 - Радио
-            if cmd == "\x04":
-                self.emit(QtCore.SIGNAL("conn_radio_stat(QString)"), QString.fromUtf8(data))
+            if cmd == b"\x04":
+                self.emit(QtCore.SIGNAL("conn_radio_stat(QString)"), 
+                                        QtCore.QString.fromUtf8(data))#
                 return True
                 
             # 5 - верификация (КАПЧА)  
-            if cmd == "\x05":
+            if cmd == b"\x05":
                 try:
                     self.PrintGui("Downloading captcha...")
-                    self.conf_o.DATA_CAPTCHA = urlopen(data).read()
+                    #G['config'].DATA_CAPTCHA = urllib.request.urlopen(data).read()
+                    Debug.info('Get captcha: %s' % data)
+                    #cap_data = urllib.request.urlopen(data).read()
+                    cap_data = urllib2.urlopen(data).read()
+                    cap_data = QtCore.QByteArray(cap_data)
                     self.PrintGui("Done.")
-                except:
-                    Debug.err("Error load captcha from %s" % (data))
-                    self.PrintGui("Error loading captcha from: %s" % (data))
-                self.emit(QtCore.SIGNAL("conn_captcha_show()"))
-                
-                if self.UseCaptchaBreaker:
-                    break_o = captcha_breaker.Capthca_crack(None,im=self.conf_o.DATA_CAPTCHA)
-                    break_o.run()
-                    Debug.info("Капча: "+str(break_o.strout))
-                    time.sleep(10)
-                    self.writeSocket(break_o.strout)
+                except Exception , err:
+                    Debug.err("Error load captcha from %s. %s" % (data,err))
+                    self.PrintGui("Error loading captcha from: %s . %s" % (data,err))
+                self.emit(QtCore.SIGNAL("conn_captcha_show(QByteArray)"),cap_data)
+                del cap_data
                 return True
             
             # 7 - Успешный ввод капчи    
-            if cmd == "\x07":
+            if cmd == b"\x07":
                 self.cpatcha_enter = True
                 Debug.debug(Debug.OKGREEN+"Успешно авторизован"+Debug.END)
                 self.emit(QtCore.SIGNAL("conn_authorization_success()"))  
@@ -285,6 +314,7 @@ class ChatConnection(QtCore.QThread):
         data = data.replace('\n',' ')
         Debug.debug('Отправка[len: %s]: %s' % (len(data),data))
         data_sended = 0
+        #data = bytes(data,'utf8')
         
         try:
             data_sended += self.socket_o.send(data)
@@ -292,13 +322,15 @@ class ChatConnection(QtCore.QThread):
                 self.PrintGui( 'Ошибка отправки: отправленно %s байт из %s байт' %  (data_sended,len(data)) )
 
                 return False
+            
+
             #while data_sended <= len(data):
             #    #add_size = data_size-len(data)
             #    data_sended += self.socket_o.send(data)
             #    print 'sended %s size %s' % (data_sended, len(data))
-        except socket.error, err:
-            print str(err)
-            self.PrintGui(str(err))
+        except socket.error ,  err:
+            print (err)
+            self.PrintGui(err)
             return False
         return True
         
@@ -311,17 +343,18 @@ class ChatConnection(QtCore.QThread):
                 if id == (self.GET_GETTER[0]-1):
                     self.writeSocket(self.GET_GETTER[1].replace('{get_post_id}',str(self.GET_GETTER[0])))
                     
-            except Exception,err:
-                print str(err)
+            except Exception , err:
+                print (err)
 
     def PrintGui(self,text):
-        self.emit(QtCore.SIGNAL("conn_msg_sys(QString)"), QString.fromUtf8(text))
+        text = QtCore.QString.fromUtf8(text)
+        self.emit(QtCore.SIGNAL("conn_msg_sys(QString)"), text)#
         return text
 
-    def printLog(self,str,print_n = False):
+    def printLog(self,s,print_n = False):
         if True:
             if print_n == False:
-                Debug.info(str)
+                Debug.info(s)
             else:
-                Debug.info(str,0)
+                Debug.info(s,)
 

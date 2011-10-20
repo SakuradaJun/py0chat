@@ -19,17 +19,26 @@ Created on 03.03.2011
     MA 02110-1301, USA.
 '''
 
+from __builtin__ import G
 from sys import platform
 import re, os, time
-from PyQt4 import QtCore,QtGui
+from PyQt4 import QtCore, QtGui
+from PyQt4.QtGui import QDesktopServices
+import PyQt4
 
-reCompile_ImagesThumd_F = re.compile('(<a href="(http://.*(\.png|\.jpg|\.jpeg|\.gif))".*>.*</a>)')
-reCompile_ImagesRGHostRe_F = re.compile('(http\:\/\/rghost\.ru\/(\d+)\.view)')
-#reCompile_ImagesRGHostRe_R = re.compile('http:\/\/rghost\.ru\/\\1\.\\2')
-#result = re.search(reCompile_ImagesRGHostRe_F,u'gfdgfd gfd dfg http://rghost.ru/4698495.view')
-#if result:
-#    print result.groups()
-#sys.exit()
+def OpenUrl_in_Browser(url):
+    #TODO: Открывать ссылку в запущенном браузере
+    if platform == 'win32':
+        """ps = popen("tasklist.exe","r")
+        pp = ps.readlines()
+        ps.close()"""
+        QDesktopServices.openUrl(PyQt4.QtCore.QUrl(url))
+        
+    else:
+        browsers = ('chromium-browser','opera','firefox')
+        
+        os.system("%s '%s' &" % (browsers[1],url))
+    
 def timeit(method):
 
     def timed(*args, **kw):
@@ -39,8 +48,7 @@ def timeit(method):
 
         #print '%r (%r, %r) %2.2f sec' % \
         #      (method.__name__, args, kw, te-ts)
-        print '%r %2.2f sec ' % \
-             (method.__name__,te-ts)
+        print ('%r %2.2f sec ' % (method.__name__,te-ts))
         return result
 
     return timed
@@ -83,24 +91,16 @@ class class_WebKitStyle():
         return templateHtml
 
     def getStyleBaseHref(self):
-        return QtCore.QUrl().fromLocalFile(QtCore.QString(self.setyleDirPath + self.TemplateFilePath)).toString()
+        #return QtCore.QUrl().fromLocalFile(QtCore.QString(self.setyleDirPath + self.TemplateFilePath)).toString()
+        return QtCore.QUrl().fromLocalFile(self.setyleDirPath + self.TemplateFilePath).toString()
     
         
-def AddImagesThumb(Text,size=(150,150)):
-    #TODO: При клике на изображение разворачивать полную версию.
-    Text = re.sub(reCompile_ImagesRGHostRe_F,'http://rghost.ru/\\2.png', Text)
-    
-    Text = re.sub(reCompile_ImagesThumd_F, 
-                  '<p>Thumb: <a href="\\2" title="\\2" alt="\\2" class="image_thumb_re">\\2<br /><img src="http://imageflyresize.appspot.com/?q=\\2&width='+str(size[0])+'&height='+str(size[1])+'"/></a></p>', 
-                  Text)
-    return Text
-
 class MessageBox(QtGui.QMessageBox):
     
-    def __init__(self,text = "Message Here",title = u'Сообщение:',type = QtGui.QMessageBox.NoIcon):
+    def __init__(self,text = "Message Here",title = 'Сообщение:',type = QtGui.QMessageBox.NoIcon):
         super(QtGui.QMessageBox, self).__init__(None)
-        text = QtCore.QString.fromUtf8(str(text))
-        title = QtCore.QString.fromUtf8(str(title))
+        #text = QtCore.QString.fromUtf8(str(text))
+        #title = QtCore.QString.fromUtf8(str(title))
         self.setText(text)
         #self.setIcon(QtGui.QMessageBox.Information); 
         self.setIcon(type); 
@@ -109,13 +109,14 @@ class MessageBox(QtGui.QMessageBox):
         self.exec_()
         
 def qStringToStr(s):
-    try:
-        if False: s = QtCore.QString()
-        #s = unicode(s) #.encode('utf-8')
-        #s = str(s.toUtf8()).decode('utf-8')
-        s = str(s.toUtf8()).decode('utf-8')
-    except Exception,err:
-        Debug.err('Decode: '+str(err))
+    if type(s) == QtCore.QString:
+        try:
+            if False: s = QtCore.QString()
+            #s = unicode(s) #.encode('utf-8')
+            #s = str(s.toUtf8()).decode('utf-8')
+            s = str(s.toUtf8()).decode('utf-8')
+        except Exception , err:
+            Debug.err('Decode: '+str(err))
         
     #s = str(QApplication.translate("MainWindow", s, None, QApplication.UnicodeUTF8))
     
@@ -144,35 +145,42 @@ class Debug_class():
     OKGREEN = '\033[92m'
 
     def err(self,s, n = True):
+        if not G['version'][2]: return
+        s = str(s)
         if platform != 'win32':
-            m = '\033[91m# [Error]: %s\033[0m' % (str(s)) 
+            m = '\033[91m# [Error]: %s\033[0m' % (s) 
         else:
-            m = '# [Error]: %s' % (str(s)) 
+            m = '# [Error]: %s' % (s) 
         if n: 
-            print m 
+            print (m)
         else: 
-                print m,    
+                print (m,)
             
-    def warr(self,s, n = True): 
+    def warr(self,s, n = True):
+        if not G['version'][2]: return 
         m = '# [Warring]: ' + str(s)
         if n: 
-            print m
+            print (m)
         else: 
-            print m, 
+            print (m,)
             
     def info(self,s, n = True):
+        if not G['version'][2]: return
         m = '# [Info]: ' + str(s)
         if n: 
-            print m
+            print (m)
         else: 
-            print m,
+            print (m,)
             
     def debug(self,s,color=None):
+        if not G['version'][2]: return
         s = '# [Debug]: %s' % (s)
-        if platform == 'win32' or color == None: 
-            print s
+        if platform != 'win32':
+            print (color+s+self.END)
         else:
-            print color+s+self.END
+            print (s)
+        
+            
 
 Debug = Debug_class()
 WebKitStyle = class_WebKitStyle()

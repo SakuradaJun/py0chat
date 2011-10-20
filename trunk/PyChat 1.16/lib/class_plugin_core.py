@@ -21,7 +21,7 @@ Created on 05.03.2011
 
 import os
 import sys
-import thread
+#import thread
 from lib.utilits import *
 
 # Базовый класс плагина
@@ -56,7 +56,8 @@ class PluginHandler(object):
 			#print 'Event: %s **args: %s ' % (event,args)
 			for func in self.events[event]:
 				#print 'Call: %s' % (func)
-				thread.start_new_thread(func, (argv,) )
+				#_thread.start_new_thread(func, (argv,) )
+				func(argv)
 		else:
 			#Debug.err('Нет события для %s' % (event))
 			pass
@@ -67,7 +68,7 @@ class PluginHandler(object):
 		try:
 			ss = os.listdir(plugins_dir) # Получаем список плагинов в /plugins
 			sys.path.insert( 0, plugins_dir) # Добавляем папку плагинов в $PATH, чтобы __import__ мог их загрузить
-		except Exception,err:
+		except Exception, err:
 			Debug.err(err)
 			Debug.info('Create dir "%s"' % (plugins_dir))
 			os.mkdir(plugins_dir)

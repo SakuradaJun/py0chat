@@ -5,9 +5,43 @@
 	<base href="%@">
 	<script type="text/ecmascript" defer="defer">
 		/*<Change>*/
+			var glob_obj;
 			function goToMark(url)
 			{
 				document.anchors['p_'+url].focus();
+			}
+			function Swap_img(obj,url)
+			{
+                return false;
+				obj.src = 'Images/loading_2.gif';
+				glob_obj = obj;
+				var img = new Image();
+					img.onload = function () {
+						//event.target = this
+						glob_obj.src = this.src;
+						//alert('Load '+this.src+' '+event.target);
+					}
+				img.setAttribute('src',url);
+                
+			}
+			function expandimg ()
+			{
+                return false;
+				var obj = event.target;
+				var url_thumb = obj.alt;
+				//var newdiv = document.createElement('div'); 
+				//newdiv.appendChild(obj);
+				
+				if(obj.src == url_thumb)
+				{
+					
+					Swap_img(obj,obj.title);
+				}
+				else
+				{
+					Swap_img(obj,url_thumb);
+				}
+                
 			}
 		/*</Change>*/
 		function messageDlvrd(message_id)
@@ -193,7 +227,7 @@
 	<style id="baseStyle" type="text/css" media="screen,print">	
 		%@
 	</style>
-	
+    
 	<!-- Although we call this mainStyle for legacy reasons, it's actually the variant style !-->
 	<style id="mainStyle" type="text/css" media="screen,print">	
 		@import url( "%@" );

@@ -49,7 +49,7 @@ class CacheToken:
     
     def Save(self):
         try:
-            file_h = file(self.bd_file_name,'w+')
+            file_h = open(self.bd_file_name,'w+')
             yaml.dump(self.bd, file_h, 
                     default_flow_style=None,
                     encoding='utf-8',
@@ -69,9 +69,9 @@ class CacheToken:
             return False
         
         try:
-            file_h = file(self.bd_file_name,'r')
+            file_h = open(self.bd_file_name,'r')
             self.bd = yaml.load(file_h)
-        except Exception,err:
+        except Exception, err:
             Debug.err(err)
             file_h.close()
             return False
@@ -97,7 +97,7 @@ class CacheToken:
             self.ip_current = s_o.getsockname()[0]
             s_o.close()
             return True
-        except Exception,err:
+        except Exception, err:
             Debug.err(err)
             return False
         
@@ -106,7 +106,7 @@ class CacheToken:
         if Token == None: return False
         if not self.SetIP(): return False
         if not self.Load(): return False
-        print "Add: %s:%s" % (self.ip_current,Token)
+        print ("Add: %s:%s" % (self.ip_current,Token))
         
         if self.chat_host in self.bd:
             if self.ip_current in self.bd[self.chat_host]:
@@ -114,6 +114,6 @@ class CacheToken:
                 Debug.warr('IP %s have more tokens (%s)'  % ( self.ip_current,Token ))
             else:
                 self.bd[self.chat_host][self.ip_current] = Token
-                print "OK"
+                print ("OK")
         self.Save()    
         return True

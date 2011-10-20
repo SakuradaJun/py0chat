@@ -22,14 +22,60 @@ Created on 07.03.2011
 
 import re
 from lib.utilits import *
+#reCompile_ImagesThumd_F = re.compile('(<a href="(http://[^<>"\']+(\.png|\.jpg|\.jpeg|\.gif))".*>.*</a>)')
+reCompile_ImagesThumd_F = re.compile(r'''(<a href="(http[s]{0,1}://[^<>'"]+(?:\.png|jpg|jpeg|gif))".*>[^ <>"']+</a>)''',re.IGNORECASE)
+reCompile_ImagesRGHostRe_F = re.compile('(http\:\/\/rghost\.ru\/(\d+)\.view)',re.I)
+####re_highlight = re.compile('([^<>【】」「](?:питон|джун|питоша|питону|питона|питоны|питоний|питонье|змей|змея|змею|настенька|настя)\S*)',re.I)
+#reCompile_ImagesRGHostRe_R = re.compile('http:\/\/rghost\.ru\/\\1\.\\2')
+#result = re.search(reCompile_ImagesRGHostRe_F,u'gfdgfd gfd dfg http://rghost.ru/4698495.view')
+#if result:
+#    print result.groups()
+#sys.exit()
+r_img_f = re.compile('(<a href="((?:http)://.*(\.png|\.jpg|\.jpeg|\.gif))".*>.*</a>)')
+
+def BE3NOGOMAIZER(text):
+    """B ЛЮБOM ДOME 3MEЮ HANДN TPETЬЮ
+    CЛOBA EN HA3OBN MAГNЧECKNE"""
+    BEZUMNIE_ONA_POKAZET_ZNAKI = {
+    "А": "A",
+    "В":"B", "Е":"E",
+    "З":"3","И":"N",
+    "Й":"N", "К":"K",
+    "М":"M","Н":"H","О":"O",
+    "Р":"P","С":"C","Т":"T","У":"Y",
+    "Х":"X","Ш":
+    "W","Я":
+    "R"
+    } # CONДEWЬ C YMA ПPOЧTR
+    BEZNOGIN = lambda ATNC: BEZUMNIE_ONA_POKAZET_ZNAKI.get(ATNC, ATNC)
+    text = ''.join(map(BEZNOGIN,text.upper()) )
+    return text
+
+def AddImagesThumb(Text,size=(150,150)):
+    #TODO: При клике на изображение разворачивать полную версию.
+    #TODO: Когда в сообщении несколько ссылок на изображение через пробел или запятую то происходит кривой парсинг
+    #TODO: Найти все ссылки, занести в в список, сделать замену.
+    Text = re.sub(reCompile_ImagesRGHostRe_F,'http://rghost.ru/\\2.png', Text)
+    Text_o = Text
+    Text = re.sub(reCompile_ImagesThumd_F, 
+    '''<a href="\\2" title="\\2" alt="\\2">\\2</a><br/><p><img class="image_thumb_re" src="http://imageflyresize.appspot.com/?q=\\2&width='''+str(size[0])+'&height='+str(size[1])+'" title="\\2" alt="http://imageflyresize.appspot.com/?q=\\2&width=150&height=150" onClick="expandimg();" /></p>', 
+                  Text)
+    if Text != Text_o:
+        print Text
+        pass
+    #'''<p>Thumb: <a href="\\2" title="\\2" alt="\\2" class="image_thumb_re">\\2<br /><img src="http://imageflyresize.appspot.com/?q=\\2&width='''+str(size[0])+'&height='+str(size[1])+'" title="http://imageflyresize.appspot.com/?q=\\2&width=150&height=150" alt="\\2" onClick="expandimg();" /></a></p>'
+    return Text
 
 def Parser_IN(Text):  
+   
     #[18:12:06] <b>&lt;<a href="event:insert,2670133"><font color="#000000">2670133</font></a></b><b>&gt;</b> Грустное кино.<br />
     #Text = Text.replace('<font color="red">', '<font color="#ff0000">')
     #Text = Text.replace('то что ищем', 'то на что заменяем')
     #<a href="#" onClick="javascript:goToMark(28792); return false;">28792</a>
     Text = re.sub("<font color=\"#000000\">(\d{1,})</font>", 
                   "<a href=\"event:block_user,\\1\">B</a>  <span class=\"msgNum\">\\1</span>", Text)
+    
+    ###FOR METext = re.sub(re_highlight , '<font color="#EE3FE2">\\1</font>', Text)
     #Text = re.sub("<font color=\"#000000\">(\d{1,})</font>", "<a href=\"event:block_user,\\1\">B</a>  <span class=\"msgNum\">\\1</span>", Text)
     
     
@@ -42,15 +88,16 @@ def Parser_IN(Text):
 def ParsePost(post_message):
     #[20:39:39] <b>&lt;<a href="event:insert,28792"><font color="#000000">28792</font></a></b><b>&gt;</b> TEst
     #re.I|re.U 
+    post_message = qStringToStr(post_message)
     try:
         post_message = post_message.strip()
-    except Exception,err:
-        Debug.err('Parse err: '+str(err))
+    except Exception, err:
+        Debug.err('Parse err: %s' % (err))
         return post_message
     #f = open('msg_dumb.dat','ab+');f.write(data);f.close()
     #parent = '.*\[(?P<time>[\d:]*)\] <b>&lt;<a href="event:insert,(?P<post_num>\d+)"><font color="#000000">\d+</font></a></b><b>&gt;</b>(?P<message>.*)(\n|\r\n|<br/>|<br />|)'
     post_message_s = post_message.split('<br />')
-    if type(post_message_s) == list and len(post_message_s) > 1:
+    if isinstance(post_message_s,list) and len(post_message_s) > 1:
         return post_message
     del post_message_s
     
@@ -62,23 +109,24 @@ def ParsePost(post_message):
             #print result.groups()
             #print u"[%s] <%s> %s\n" % (result.group('time'),result.group('post_num'),result.group('message'))
             dic = {
-                u'time':result.group(u'time'),
-                u'post_num':result.group(u'post_num'),
-                u'message':result.group(u'message')
+                'time':result.group('time'),
+                'post_num':result.group('post_num'),
+                'message':result.group('message')
             }
-            time = result.group(u'time')
-            post_num = result.group(u'post_num')
+            time = result.group('time')
+            post_num = result.group('post_num')
             message = result.group('message')
             return (time,post_num,message)
             try:
                 t = '<a href="event:insert,%s" class="msgNum">%s</a>&nbsp;<span class="post_time">%s</span><br /> %s<br />\n' % (post_num,post_num,time,message)
-            except Exception,err:
+            except Exception, err:
                 Debug.err("# %s" % (str(err)))
                 return post_message
             return t
     else:
         #print u"Not Found: %s\n" % (post_message)
         Debug.debug('Parser: not found',Debug.RED)
+        print(post_message)
         return post_message
         #print post_message
         #[21:36:00] <b>&lt;<a href="event:insert,2677196"><span class="msgNum">2677196</span></a></b><b>&gt;</b> d
@@ -87,3 +135,4 @@ def ParsePost(post_message):
         
         post_message = post_message.strip("<br />")
         return post_message
+

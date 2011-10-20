@@ -55,7 +55,7 @@ class WordFiler_DotNET:
                 return True
             return s
         
-        for i in xrange(0,bl_size):
+        for i in range(0,bl_size):
             element = []
             
             Blackword = file_h.readline().replace('\r\n','').replace('\n','')
@@ -74,7 +74,7 @@ class WordFiler_DotNET:
         file_h.close()
         return
         for item in self.filter_in:
-            print item
+            print (item)
             #['\xd0\x8e', True, False, '']
 
     @timeit  
@@ -102,7 +102,7 @@ class WordFiler_DotNET:
                     if IgnorePost:
                         return ''
                     else:
-                        print 'Find: %s Replace: %s' % (item[0],item[3])
+                        print ('Find: %s Replace: %s' % (item[0],item[3]))
                         #print "REPLACE"
                         #par_find = re.compile(Blackword, re.I|re.U)
                         #print 're.sub(\'%s\',\'%s\',\'%s\')' % (Blackword, ReplaceWord ,src)

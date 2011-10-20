@@ -31,5 +31,5 @@ class KernelPlugin(Plugin): # производим наш плагин от ро
         pass
         
     def OnCommand(self, cmd_args):
-        print cmd_args
+        print (cmd_args)
         return

@@ -19,8 +19,9 @@ Created on 12.03.2011
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
     MA 02110-1301, USA.
 '''
-
+from __builtin__ import G
 USE_PYNOTIFY = True
+BuildTrayTheme = object()
 import sys
 import os
 from lib.class_plugin_core import Plugin
@@ -28,22 +29,30 @@ from lib.class_plugin_core import Plugin
 if sys.platform != 'linux2': USE_PYNOTIFY = False
 
 if USE_PYNOTIFY:
-    import pynotify
-else:
+    try: 
+        import pynotify
+    except ImportError:
+        print("Module pynotify not found")
+        USE_PYNOTIFY = False
+
+if not USE_PYNOTIFY:
     from lib.utilits import WebKitStyle
-    from PyQt4 import QtCore, QtGui
+    from PyQt4 import QtCore
+    from PyQt4 import QtGui
     class class_BuildTrayTheme:
-        
-        
+
         themePath = ''
-        
         themeHeaderCSS = ''
         themeHeader = ''
         themeContent = ''
         themeContentCSS = ''
         traytheme_path = os.path.abspath('res/style/traytheme/')
+        obj_mainWin = None
         
-        def __init__(self):
+        def __init__(self,obj_mainWin):
+            self.obj_mainWin = obj_mainWin
+            self.traytheme_path = os.path.abspath(G['script_dir']+'//res/style/traytheme/')
+            
             theme_dir = ('msg','system','onlalert')[2]
             
             self.themeHeader = self.ReadFile(self.traytheme_path+'/'+theme_dir+'/header.html')
@@ -64,10 +73,9 @@ else:
         
         def GetLocalPath(self,path):
             full_path = os.path.abspath(path)
-            return QtCore.QUrl().fromLocalFile(QtCore.QString(full_path)).toString()
-        
-        
-    if not USE_PYNOTIFY: BuildTrayTheme = class_BuildTrayTheme()
+            #return QtCore.QUrl().fromLocalFile(QtCore.QString(full_path)).toString()
+            
+            return QtCore.QUrl().fromLocalFile(full_path).toString()
 
     class PopUp(QtGui.QWidget):
         
@@ -78,15 +86,15 @@ else:
         obj_parent_plugin = None
         bottom_offset = 100 # Отступ от низа 26
         
-        popUp_width = 280 #300
-        popUp_height = 110 #100
+        popUp_width = 200 #280
+        popUp_height = 90 #110
         popUp_def_position = (1280, 982)#942-8
         popUp_margin = 8
         
         slide_steep = 5
         slide_animation_time = 10
         
-        flags = QtCore.Qt.FramelessWindowHint| QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.ToolTip
+        flags = QtCore.Qt.FramelessWindowHint| QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.ToolTip #| QtCore.Qt.WA_TransparentForMouseEvents
         
         def __init__(self,parent,obj_parent_plugin,msg):
             QtGui.QWidget.__init__(self)
@@ -95,7 +103,18 @@ else:
             
             self.setupUi()
             self.setWindowFlags(self.windowFlags() | self.flags)
+
+            self.installEventFilter(self)
             self.go(msg)
+            
+        def eventFilter(self,obj,e):
+            
+            if e.type() == 10:
+                self.setWindowOpacity(self.Opacity)
+            elif e.type() == 11:
+                self.setWindowOpacity(1)
+            return False
+            
             
         def setupUi(self):
             #self.resize(184, 163)
@@ -133,7 +152,9 @@ else:
                 if len(self.obj_parent_plugin.popup_list) == 1:
                     del self.obj_parent_plugin.popup_list[0]
               
-        def __del__(self): print "~Popup"
+        def __del__(self): 
+            pass
+            #print ("~Popup")
         
         def setCloseTimer(self): 
             self.qTimer = QtCore.QTimer()
@@ -198,21 +219,42 @@ class PopupMessages(Plugin):
     
     def OnLoad(self,parent,P):
         self.obj_mainWin = parent
+        global BuildTrayTheme
+        BuildTrayTheme = class_BuildTrayTheme(self.obj_mainWin)
         P.AddEventHandler('chat_message_filter_msg', self.Message)
         
+        self.Message('msg')
+        return
+        import thread
+        import time
+        def test():
+            while 1:
+                time.sleep(1)
+                self.Message('msg')
+        #thread.start_new_thread(test, () )
+        test() 
+        
     def Message(self,msg):
+        if G['config'].settings['showpopupmsg'] == False: return
+        
         if type(msg) == str:
             msg = (str(msg),'')
         else:
-            msg = (str(msg[0]),str(msg[1]))
+            msg = (unicode(msg[0]),str(msg[1]))
             
         if not USE_PYNOTIFY:
-            self.popup_list.append(PopUp(self.obj_mainWin,self,msg))
+            
             i = 0
+            for win in self.popup_list:
+                del self.popup_list[i]
+                i += 1
+            self.popup_list.append(PopUp(self.obj_mainWin,self,msg))
+            '''
             for win in self.popup_list:
                 if win.isHidden():
                     del self.popup_list[i]
                 i += 1
+            '''
         else:
             #self.notify_msg(msg[1],msg[0])
             self.notify_msg_icon(msg[1],msg[0])
@@ -220,7 +262,7 @@ class PopupMessages(Plugin):
     def notify_msg(self,title_text='Title',text='There has to be text.'):
         pynotify.init("Basics")
         n = pynotify.Notification(title_text,text)
-        n.set_timeout(self.timeout)
+        #n.set_timeout(self.timeout)
         n.show()
         
     def notify_msg_icon(self,title_text='Title',text='There has to be text.',icon='res/Images/mail-unread-new.png'):

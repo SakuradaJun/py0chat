@@ -16,7 +16,7 @@ body {
 }
 
 .replico {
-	margin-bottom: 1em;
+	/*margin-bottom: 1em;*/
 }
 
 .inContact, .outContact, .inActionContact, .outActionContact {
@@ -46,7 +46,7 @@ body {
 
 .m_highlight {
 	-webkit-animation-name: highlight;
-	-webkit-animation-duration: 1.2s;
+	-webkit-animation-duration: 1.5s; /*1.2s*/
 	-webkit-animation-iteration-count: 1;
 	-webkit-animation-timing-function: linear;
 }

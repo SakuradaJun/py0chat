@@ -36,7 +36,7 @@ class TAB(QtGui.QWidget):
         self.Debug_Window.setCentralWidget(self.Debug_Window.centralWidget);
         self.Debug_Window.show()
         
-    def AddDebug(self,text): self.Debug_Window.textEdit.insertPlainText('\n\n'+text_p+'\n')
+    def AddDebug(self,text): self.Debug_Window.textEdit.insertPlainText('\n\n'+text+'\n')
     
     def tab_close_sig(self,i): pass ;#print 'Req close %s tab' % (i)
         

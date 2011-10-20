@@ -14,6 +14,12 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
+   <property name="margin">
+    <number>1</number>
+   </property>
+   <property name="spacing">
+    <number>1</number>
+   </property>
    <item row="0" column="0">
     <widget class="QWidget" name="cap_widget" native="true">
      <layout class="QGridLayout" name="gridLayout">
@@ -432,7 +438,7 @@ p, li { white-space: pre-wrap; }
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <widget class="QWebView" name="Message_Webkit" native="true">
+     <widget class="QWebView" name="Message_Webkit">
       <property name="minimumSize">
        <size>
         <width>0</width>
@@ -444,7 +450,7 @@ p, li { white-space: pre-wrap; }
         <stylestrategy>PreferAntialias</stylestrategy>
        </font>
       </property>
-      <property name="url" stdset="0">
+      <property name="url">
        <url>
         <string>about:blank</string>
        </url>
@@ -528,7 +534,7 @@ p, li { white-space: pre-wrap; }
   <customwidget>
    <class>QWebView</class>
    <extends>QWidget</extends>
-   <header>QtWebKit/QWebView</header>
+   <header>PyQt4.QtWebKit</header>
   </customwidget>
  </customwidgets>
  <tabstops>

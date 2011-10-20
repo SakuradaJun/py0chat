@@ -17,3 +17,5 @@ Created on 07.03.2011
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
     MA 02110-1301, USA.
 '''
+TABT_1984_CHAT = 1
+TABT_WEB = 2

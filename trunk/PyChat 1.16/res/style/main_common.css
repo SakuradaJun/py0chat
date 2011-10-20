@@ -1,7 +1,8 @@
 .image_thumb_re {
-	//background-color: #FFFFA0;
-	fload: right;
-	//border: 1px solid black;
+	/*background-color: #FFFFA0;*/
+	float: none;
+	/*cursor: pointer;*/
+	border: 1px dotted #3366ff;
 }
 a {
 	text-decoration: none;
@@ -18,4 +19,4 @@ a {
 
 .reply {
 	color: #ff6600;
-} 
+}

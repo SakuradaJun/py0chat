@@ -18,16 +18,18 @@ Created on 07.03.2011
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
     MA 02110-1301, USA.
 '''
+from __builtin__ import G
 from PyQt4 import QtCore, QtGui, uic, QtWebKit
-from class_tab import TAB
+from lib.gui.class_tab import TAB
 from lib.class_ChatConnection import ChatConnection
 from lib.utilits import *
 from lib.utilits_parser import *
+import sys
+from lib import utilits_parser
 #from lib.class_wordFiler import WordFilter
 
 class TAB_Connection(TAB):
     
-    obj_mainWin = None
     obj_conn = None
     obj_parent = None
         
@@ -39,22 +41,19 @@ class TAB_Connection(TAB):
     isConnected = False
     
     def __init__(self): super(TAB_Connection,self).__init__(self.obj_parent)
-    def init_TWO(self,connIndex=None,conn_par=None, mainWin=None, IsAutoConn=False):
+    def init_TWO(self,connIndex=None,conn_par=None, IsAutoConn=False):
         if False: 
             self.obj_parent = QtGui.QTabWidget()
             self.Message_Webkit = QtWebKit.QWebView()
             self.lineEdit_Captcha = QtGui.QLineEdit()
-       
-        self.obj_parent = mainWin.chat_tabs
-        self.obj_mainWin = mainWin
-        self.CONF_O = self.obj_mainWin.CONF_O
+
+        self.obj_parent = G['chat_win'].chat_tabs
         self.connIndex = connIndex
-        self.P = self.obj_mainWin.P
         #self.setWindowTitle('dasda [*]')
         #self.setWindowModified(True)
         self.SetupUI()
         
-        if connIndex: 
+        if connIndex != None: 
             self.Settings_Load(connIndex)
         if conn_par and False:
             if IsAutoConn:
@@ -66,11 +65,11 @@ class TAB_Connection(TAB):
         
         #self.tab_SetIcon_Modifed()
         if False:
-            Test_text = u'[20:39:39] <b>&lt;<a href="event:insert,28793"><font color="#000000">28793</font></a></b><b>&gt;</b> '
-            self.AddText(u'[20:39:39] <b>&lt;<a href="event:insert,28792"><font color="#000000">28792</font></a></b><b>&gt;</b>  искра, и ты покроешь собой город <a href="http://2ip.ru">http://2ip.ru</a> AND http://rghost.ru/4698495.view')
-            self.AddText(u'[20:39:39] <b>&lt;<a href="event:insert,28793"><font color="#000000">28793</font></a></b><b>&gt;</b>  <span class="reply">&gt;&gt;28792</span> искра, и ты покроешь собой город <a href="http://py-chat.tk">http://py-chat.tk</a>')
+            Test_text = '[20:39:39] <b>&lt;<a href="event:insert,28793"><font color="#000000">28793</font></a></b><b>&gt;</b> '
+            self.AddText('[20:39:39] <b>&lt;<a href="event:insert,28792"><font color="#000000">28792</font></a></b><b>&gt;</b>  искра, и ты покроешь собой город <a href="http://2ip.ru">http://2ip.ru</a> AND http://rghost.ru/4698495.view')
+            self.AddText('[20:39:39] <b>&lt;<a href="event:insert,28793"><font color="#000000">28793</font></a></b><b>&gt;</b>  <span class="reply">&gt;&gt;28792</span> искра, и ты покроешь собой город <a href="http://py-chat.tk">http://py-chat.tk</a>')
         
-            self.AddText(Test_text+u' Text \\s <a href="http://rghost.ru/4698495.png">http://rghost.ru/4698495.png</a> Text')
+            self.AddText(Test_text+' Text \\s <a href="http://rghost.ru/4698495.png">http://rghost.ru/4698495.png</a> Text')
         #self.WEB_view.setUrl(QtCore.QUrl('www.google.com'))
         #self.WEB_page.mainFrame().evaluateJavaScript()
         #self.WEB_page.mainFrame().setHtml('efefasfas')
@@ -80,8 +79,9 @@ class TAB_Connection(TAB):
             self.conn_Start()
         
     def Settings_Load(self,index):
-        sett = self.obj_mainWin.CONF_O.settings
+        sett = G['config'].settings
         current_index = sett['servers'][self.connIndex]
+        print ('Set %s' % current_index['host'])
         self.lineEdit_Name.setText(QtGui.QApplication.translate("MainWindow",current_index['user_nick'], None, QtGui.QApplication.UnicodeUTF8))
         self.checkBox_Name.setChecked(bool(current_index['NamefagMode']))
         self.lineEdit_Host.setText(current_index['host'])
@@ -90,26 +90,40 @@ class TAB_Connection(TAB):
         self.tab_SetName(current_index['name'])
             
     def Settings_Save(self,index):
-        sett = self.obj_mainWin.CONF_O.settings
+        sett = G['config'].settings
         current_index = sett['servers'][index]
         current_index['user_nick'] = unicode(self.lineEdit_Name.text()).encode('utf-8')
         current_index['NamefagMode'] = bool(self.checkBox_Name.isChecked())
-        self.obj_mainWin.CONF_O.Save()
+        current_index['howpopupmsg'] = bool(G['chat_win'].action_ShowPopup.isChecked())
+        #self.action_ShowPopup.setChecked(bool(CONF_O.settings['']))
+        G['config'].Save()
         
     def SetupUI(self):
         uic.loadUi('res/tab.ui',self)
         self.WEB_page = QtWebKit.QWebPage(self.Message_Webkit)
+        
         self.groupBox_ConnStat.hide()
         self.Message_Webkit.setPage(self.WEB_page)
         self.WEB_page.connect(self.WEB_page, QtCore.SIGNAL("linkClicked(QUrl)"), self.WEB_LinkClicked )
-        
         self.WEB_page.setLinkDelegationPolicy(self.WEB_page.DelegateAllLinks)
         self.Message_Webkit.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        
         self.connect(self.Message_Webkit, QtCore.SIGNAL('customContextMenuRequested ( const QPoint & )'), lambda p: self.Message_Webkit_MenuRequested(p,self.Message_Webkit))
         
         self.Input.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.connect(self.Input, QtCore.SIGNAL('customContextMenuRequested ( const QPoint & )'), lambda p: self.Input_MenuRequested(p,self.Input))
-        
+        #QtWebKit.QWebPage().OpenImageInNewWindow
+        #QtWebKit.QWebPage().OpenLink
+        #QtWebKit.QWebView().
+        '''
+            QWebView *view = QWebView(NULL);
+            view->page->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
+            /* Другие значения аргумента - QWebPage::DontDelegateLinks
+            и QWebPage::DelegateExternalLink. QWebPage::DelegateAllLinks
+            заставляет вместо того, чтобы открывать ссылки выдавать
+            сигнал linkClicked(QUrl) */
+            connect(view,SIGNAL(linkClicked(QUrl)),this,SLOT(openLink(QUrl)));
+        '''
         self.font_Input = QtGui.QFont()
         self.font_Input.setFamily("Droid Sans")
         self.font_Input.setPointSize(14)
@@ -133,11 +147,16 @@ class TAB_Connection(TAB):
                 if self.isConnected: self.groupBox_OnConnected.show()
                 self.widget_Bottom.show()
                 
-        self.connect(self.obj_mainWin, QtCore.SIGNAL("SwitchMiniStyle(bool)"),SwitchMiniStyle)
+        self.connect(G['chat_win'], QtCore.SIGNAL("SwitchMiniStyle(bool)"),SwitchMiniStyle)
         def SetMessageLen():
-            msg_len = self.Input.toPlainText().length()
+            msg_len = len(self.Input.toPlainText())
             if msg_len:
-                self.ButtonSend.setText('Send (%s)' % (msg_len))
+                str_len = msg_len+len(self.lineEdit_Name.text())
+                if str_len > 255:
+                    self.ButtonSend.setText('Send (%s) Too long!!' % (str_len))
+                else:
+                    self.ButtonSend.setText('Send (%s)' % (str_len))
+                
             else:
                 self.ButtonSend.setText('Send')
                 
@@ -147,43 +166,69 @@ class TAB_Connection(TAB):
         self.installEventFilter(self)  
         #self.WEB_page.installEventFilter(self)
         #self.Message_Webkit.installEventFilter(self)
+        
     def InputPasteText(self,text):
-        self.Input.insertPlainText(QtCore.QString().fromUtf8(text))
+        self.Input.insertPlainText(text)
                                    
     def Input_MenuRequested(self,point,obj):
         Menu = QtGui.QMenu(self)
         Menu_def = obj.createStandardContextMenu()
         
         def PasteClipboardText():
-            self.InputPasteText('*>'+QtGui.QApplication.clipboard().text()+'* //')
+            self.InputPasteText('*>'+QtGui.QApplication.clipboard().text()+'* # ')
+
         i = 1
         for def_action in  Menu_def.actions():
             if i == 9: 
                     action_paste = QtGui.QAction(u'Вставить-цит.', 
                                                  self, triggered = PasteClipboardText)
-                    if not str(QtGui.QApplication.clipboard().text()): action_paste.setDisabled(True)
+                    if not qStringToStr(QtGui.QApplication.clipboard().text()): 
+                        action_paste.setDisabled(True)
                     Menu.addAction(action_paste)
             Menu.addAction(def_action)
             i += 1
         Menu.exec_(self.Input.mapToGlobal(point) )
         
-    def MessagesClear(self): self.WEB_page.mainFrame().evaluateJavaScript(QtCore.QString("document.getElementById('Chat').innerHTML = ''"))
+    def MessagesClear(self): self.WEB_page.mainFrame().evaluateJavaScript("document.getElementById('Chat').innerHTML = ''")
                 
     def Message_Webkit_MenuRequested(self,point,obj=None):
         #print  point,obj
         
         Menu = QtGui.QMenu(self)
-        Menu.addAction(QtGui.QAction("New tab", self, triggered = lambda x=None: self.obj_mainWin.CreateTab(1)))
+        Menu_servers = QtGui.QMenu(Menu)
+        Menu_servers.setTitle("New tab")
+        
+        for item in  G['config'].settings['servers']:
+            i_name =  G['config'].settings['servers'][item]['name']
+            t = (item, i_name)
+            #'%s - %s' % (i_name,item)
+            action = QtGui.QAction('%s' % (i_name), self, 
+                                   triggered = lambda x=0,a=t: G['chat_win'].CreateTab(connIndex=a[0],TabName=a[1],conn_par=None, IsAutoConn=False))
+            
+            Menu_servers.addAction(action)
+        Menu.addMenu(Menu_servers)
+        #QtGui.QAction("New tab", self, triggered = lambda x=None: G['chat_win'].CreateTab(1)))
+        
+        
+            
         #Menu.addAction(QtGui.QAction("Get...", self, triggered = self.GET))
-        #Menu.addAction(self.obj_mainWin.action_GetGetter)
+        #Menu.addAction(G['chat_win'].action_GetGetter)
         #DefaultMenu.setTitle('Default actions')
         #Menu.addAction(QtGui.QAction("Test", self))
         #QtCore.QString().fromUtf8
         q_text = self.WEB_page.selectedText()
         if q_text:
+            def block(post_id):
+                send_result = self.obj_conn.writeSocket('@block %s' % post_id)
             text = qStringToStr(q_text)
-            text = '*>'+text+'* // '
-            Menu.addAction(QtGui.QAction(u'Цитировать', self,triggered = lambda x=0: self.Input.insertPlainText(QtCore.QString().fromUtf8(text))))
+            text_qq = '*>'+text+'* # '
+            Menu.addAction(QtGui.QAction(u'Цитировать', self,triggered = lambda x=0: self.Input.insertPlainText(text_qq)))
+            if hasattr(self, 'obj_conn') and self.obj_conn:
+                r = re.match('([^\s]\d+)',text)
+                if r:
+                    t = r.group(0)
+                    action_block = QtGui.QAction('@block '+t,self, triggered = lambda x=0: block(t))
+                    Menu.addAction(action_block)
         
         DefaultMenu = self.WEB_page.createStandardContextMenu()
         DefActionsQList = DefaultMenu.actions()
@@ -196,14 +241,14 @@ class TAB_Connection(TAB):
         Menu.exec_(self.Message_Webkit.mapToGlobal(point) )
         
     def AddMainMenuActions(self,Menu):
-        #Menu.addAction(QtGui.QAction("New tab", self, triggered = lambda x=None: self.obj_mainWin.CreateTab(1)))
+        #Menu.addAction(QtGui.QAction("New tab", self, triggered = lambda x=None: G['chat_win'].CreateTab(1)))
         ##Menu_WordFilter = QtGui.QMenu(Menu)
         ##Menu_WordFilter.setTitle("Word filter")
         ##Menu_WordFilter.addAction(QtGui.QAction("Edit...", self,
-        ##                             triggered = self.obj_mainWin.WordFilterWindow))
+        ##                             triggered = G['chat_win'].WordFilterWindow))
         ##Menu.addMenu(Menu_WordFilter)
         #Menu.addAction(QtGui.QAction("Exit", self,
-        #                             triggered = self.obj_mainWin.close))
+        #                             triggered = G['chat_win'].close))
         Menu_View = QtGui.QMenu(Menu)
         Menu_View.setTitle("View")
         
@@ -213,10 +258,10 @@ class TAB_Connection(TAB):
         for style in QtGui.QStyleFactory.keys():
                 #QtGui.QApplication.sty
                 style = str(style)
-                set_style = lambda x,s = style: self.obj_mainWin.changeStyle( s )
+                set_style = lambda x,s = style: G['chat_win'].changeStyle( s )
                 style_action = QtGui.QAction(style, self, triggered = set_style )
+                style_action.setCheckable(True)
                 if style_current.upper() == style.upper():
-                    style_action.setCheckable(True)
                     style_action.setChecked(True)
 
                 Menu_Style.addAction(style_action)
@@ -224,6 +269,13 @@ class TAB_Connection(TAB):
         
         Menu_View.addMenu(Menu_Style)
         Menu.addMenu(Menu_View)
+        Menu.addAction(G['chat_win'].action_ShowPopup)
+        #beznogo_check.toggled(False)
+        #self.action_SwitchMiniStyle.triggered.connect(lambda b: self.emit(QtCore.SIGNAL("SwitchMiniStyle(bool)"),b))
+        
+        #self.actionApp_quit.triggered.connect(self.close)
+        Menu.addAction(G['chat_win'].beznogo_check)
+        
         Menu.addSeparator()
 
     def OnConnected(self):
@@ -247,7 +299,7 @@ class TAB_Connection(TAB):
             
         if Qobj == self.Message_Webkit and event.type() == QtCore.QEvent.MouseButtonPress:
             if event.button() == QtCore.Qt.RightButton:
-                print event,event.type(),Qobj
+                print (event,event.type(),Qobj)
                 point =  event.pos()
                 Menu = self.WEB_page.createStandardContextMenu()
                 if Menu:
@@ -264,7 +316,7 @@ class TAB_Connection(TAB):
         self.conn_Start()
         
     def conn_Start(self):
-        self.obj_conn = ChatConnection(self.obj_mainWin, self)
+        self.obj_conn = ChatConnection(G['chat_win'], self)
         self.SetSignalFor(self.obj_conn)
         self.obj_conn.chat_port = int(self.chat_port)
         self.obj_conn.chat_host = str(self.chat_host)
@@ -288,14 +340,14 @@ class TAB_Connection(TAB):
 
     def SetSignalFor(self,obj):
         #print 'Set signals for %s' % (obj)
-        self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_msg_chat(QString)"),self.SIGNAL_msg_chat)
-        self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_msg_sys(QString)"), self.SIGNAL_msg_sys)
-        self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_msg_chat_err(QString)"), self.SIGNAL_msg_chat)
-        self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_captcha_show()"), self.Captcha_View)
-        self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_authorization_success()"), self.OnConnected)
-        self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_del()"), self.conn_Del)
-        self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_online_users(int)"), lambda i: self.label_Online.setText('<b>Online:&nbsp;</b> %s' % (i)) )
-        self.obj_mainWin.connect(obj, QtCore.SIGNAL("conn_radio_stat(QString)"), lambda s: self.label_Status.setText('<b>Radio:&nbsp;</b> %s' % (s)) )
+        G['chat_win'].connect(obj, QtCore.SIGNAL("conn_msg_chat(QString)"),self.SIGNAL_msg_chat)
+        G['chat_win'].connect(obj, QtCore.SIGNAL("conn_msg_sys(QString)"), self.SIGNAL_msg_sys)
+        G['chat_win'].connect(obj, QtCore.SIGNAL("conn_msg_chat_err(QString)"), self.SIGNAL_msg_chat)
+        G['chat_win'].connect(obj, QtCore.SIGNAL("conn_captcha_show(QByteArray)"), self.Captcha_View)
+        G['chat_win'].connect(obj, QtCore.SIGNAL("conn_authorization_success()"), self.OnConnected)
+        G['chat_win'].connect(obj, QtCore.SIGNAL("conn_del()"), self.conn_Del)
+        G['chat_win'].connect(obj, QtCore.SIGNAL("conn_online_users(int)"), lambda i: self.label_Online.setText('<b>Online:&nbsp;</b> %s' % (i)) )
+        G['chat_win'].connect(obj, QtCore.SIGNAL("conn_radio_stat(QString)"), lambda s: self.label_Status.setText('<b>Radio:&nbsp;</b> %s' % (s)) )
         
     def SIGNAL_msg_chat(self,s):
         s = qStringToStr(s)
@@ -303,7 +355,10 @@ class TAB_Connection(TAB):
         if not self.tab_IsActive(): 
             self.notReadMessagesCount += 1
             self.tab_SetIcon_Modifed()
-        self.P.Event('chat_message', s) 
+        if not G['chat_win'].isActiveWindow():
+            G['msg_counter'][0] += 1
+            G['chat_win'].titleUpdate()
+        G['plugin_o'].Event('chat_message', s) 
         
     def SIGNAL_msg_sys(self,s):
         s = qStringToStr(s)
@@ -311,7 +366,7 @@ class TAB_Connection(TAB):
         if not self.tab_IsActive(): 
             self.notReadMessagesCount += 1
             self.tab_SetIcon_Modifed()
-        self.P.Event('chat_message_sys', s)
+        G['plugin_o'].Event('chat_message_sys', s)
         
     def WEB_LinkClicked(self,qUrl):
         anchort_text= qUrl.toString()
@@ -320,26 +375,34 @@ class TAB_Connection(TAB):
                 if event_split[0] == 'event:insert':
                     self.Input.insertPlainText('>>'+event_split[1]+' ')
                 if  event_split[0] == 'event:block_user':
-                    print 'Block %s' % (event_split[1])
+                    print ('Block %s' % (event_split[1]))
         else:
-            pass
+            if qUrl.toString()[0:1] == 'h':
+                OpenUrl_in_Browser(qUrl.toString()) 
+            #G['chat_win'].AddCustomTab()
 
-    def AddText(self,Text,parse=True):
+    def AddText(self,Text,parse=True):        
         if parse:
+            Text = qStringToStr(Text)
             result = ParsePost(Text)
             
-            if type(result) == tuple:
+            if isinstance(result, tuple):
                 time = result[0]
                 num = result[1]
-                msg = Parser_IN(result[2])
-
-                #msg = WordFilter.FilterMessage(msg)
-                msg = msg.replace('\\', '&#92;')
-                msg = msg.replace(r"'",r"\'")
-                if not self.obj_mainWin.isActiveWindow():
-                    self.P.Event('chat_message_filter_msg', (msg,self.tab_GetName()))
+                
+                msg = result[2]
+                msg = msg.replace(r"'",r"&#39;").replace('\\', '&#92;')
+                #msg = msg.replace(r"'",r"\'")
+                #msg = msg.replace('\\', '&#92;')
+                msg = Parser_IN(msg)
+                if msg in ('','\t','\n','\r',' '):
+                    print ("Empty message egnored [%s]" % (msg))
+                    return False
+                
+                if not G['chat_win'].isActiveWindow():
+                    G['plugin_o'].Event('chat_message_filter_msg', (msg,self.tab_GetName()))
     
-                msg = AddImagesThumb(msg,self.obj_mainWin.CONF_O.settings['image_thumb_size'])
+                msg = AddImagesThumb(msg, G['config'].settings['image_thumb_size'])
                 Text = """<div class="replico">
                 <span class="inContact">%s</span>
                 <span class="inContentTime">&nbsp;[%s]</span><br>
@@ -347,19 +410,24 @@ class TAB_Connection(TAB):
                 <div id="insert"></div>
                 </div>""".replace('\n', '') % ('<a href="event:insert,%s" class="msgNum" name="p_%s">%s<a/>' % (num,num,num),time,msg)
                 #Debug.debug('Add: '+Text)
-                self.WEB_page.mainFrame().evaluateJavaScript((QtCore.QString("appendMessage('%s')" % (Text))))
+                self.WEB_page.mainFrame().evaluateJavaScript("appendMessage('%s')" % (Text))
                 return
                 
             else:
                 Text = Text.replace('\n','<br />')
                 Text = Text.replace('\r','<br />')
                 Text = Text.replace('\\', '&#92;')
-                Text = Text.replace(r"'",r"\'")
-        self.WEB_page.mainFrame().evaluateJavaScript((QtCore.QString("appendMessage('%s')" % (Text+'<br />'))))
+                #Text = Text.replace(r"'",r"\'")
+                Text = Text.replace(r"'",r"&#39;")
+        Text = QtCore.QString.fromUtf8(Text+'<br />')
+        self.WEB_page.mainFrame().evaluateJavaScript("appendMessage('%s')" % (Text) )
     
     def SendMessage(self):
+        #msg = self.Input.toPlainText()
         msg = unicode(self.Input.toPlainText()).encode('utf-8')
         if not msg: return
+        if G['chat_win'].beznogo_check.isChecked ():
+            msg = utilits_parser.BE3NOGOMAIZER(msg)
         if self.checkBox_Name.isChecked():
             name = unicode(self.lineEdit_Name.text()).encode('utf-8')
             msg = name+msg
@@ -374,9 +442,9 @@ class TAB_Connection(TAB):
         result = self.obj_conn.writeSocket(unicode(self.lineEdit_Captcha.text()).encode('utf-8'))
     
     def Captcha_View(self,img_data = None):
-        self.obj_mainWin.qapp.alert(self,0)
+        G['QAPP'].alert(self,0)
         image = QtGui.QPixmap()
-        image.loadFromData(self.obj_mainWin.CONF_O.DATA_CAPTCHA)
+        image.loadFromData(img_data)
         #width = image.width()height = image.height()
         self.lineEdit_Captcha.clear()
         self.label_Captcha.setPixmap(image)
@@ -385,21 +453,22 @@ class TAB_Connection(TAB):
         self.lineEdit_Captcha.setDisabled(False)
         self.Button_CaptchaOK.setDisabled(False)
         self.lineEdit_Captcha.setFocus()
-        self.obj_mainWin.CONF_O.DATA_CAPTCHA = None
         
     def GET(self):
         if not self.obj_conn:
-            MessageBox('Подключение не осуществлено.','Error',type=QtGui.QMessageBox.Warning)
+            MessageBox(u'Подключение не осуществлено.','Error',type=QtGui.QMessageBox.Warning)
             return
         get_win = QtGui.QDialog(self)
         uic.loadUi('res/get.ui',get_win)
-        get_win.setWindowTitle('Get getter - '+self.tab_GetName())
-        get_win.lineEdit_Post_ID.setText(str(self.obj_conn.GET_GETTER[0]))
-        get_win.TextEdit_GetText.insertPlainText(QtCore.QString.fromUtf8(self.obj_conn.GET_GETTER[1]))
+        get_win.setWindowTitle(u'Get getter - '+self.tab_GetName())
+        get_win.lineEdit_Post_ID.setText(str(self.obj_conn.GET_GETTER[0]) )
+        get_win.TextEdit_GetText.insertPlainText(self.obj_conn.GET_GETTER[1])
+        #get_win.TextEdit_GetText.insertPlainText(QtCore.QString.fromUtf8(self.obj_conn.GET_GETTER[1]))
         if get_win.exec_():
             self.obj_conn.GET_GETTER[0] = int(get_win.lineEdit_Post_ID.text())
-            self.obj_conn.GET_GETTER[1] = unicode(get_win.TextEdit_GetText.toPlainText()).encode('utf-8')
-    
+            self.obj_conn.GET_GETTER[1] = get_win.TextEdit_GetText.toPlainText()
+            self.AddText(u'<p>*GetGetter: id:%s text: %s</p>' % (int(get_win.lineEdit_Post_ID.text()),get_win.TextEdit_GetText.toPlainText()),False)
+            
     def OnClose(self,i):
         self.Settings_Save(self.connIndex)
         self.conn_Stop()

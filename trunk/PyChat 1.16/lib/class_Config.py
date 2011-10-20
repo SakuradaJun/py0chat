@@ -24,8 +24,8 @@ try:
     import os
     import yaml
     from lib.utilits import *
-except Exception,err:
-    print err
+except Exception, err:
+    print (err)
     sys.exit()
 
 class Config():
@@ -40,8 +40,10 @@ class Config():
         'admin_pass': None,
         'open_server_tabs': (2,3),
         'autoconnect': True,
+        'showpopupmsg': 1,
         'servers':{
                 0:{
+                    'protocol_type': '0chat',
                     'name':'Test',
                    'token_page': 'http://site.ru/',
                     'host': 'site.ru',
@@ -52,6 +54,7 @@ class Config():
                 },
                 
                 1:{
+                    'protocol_type': '0chat',
                     'name':'0chan.ru',
                     'token_page': 'http://0chan.ru/0chat',
                     'host': '0chan.ru',
@@ -62,6 +65,7 @@ class Config():
                 },
                 
                 2:{
+                    'protocol_type': '0chat',
                     'name': 'py-chat.tk',
                     'token_page': 'http://py-chat.tk',
                     'host': 'py-chat.tk',
@@ -69,6 +73,17 @@ class Config():
                     'user_nick': '**<аноним> **',
                     'NamefagMode': False,
                     'icon_path':'res/Images/0chan.ru.ico'
+                },
+                
+                3:{
+                    'protocol_type': '1chat',
+                    'name': '1chan.ru',
+                    'token_page': 'http://py-chat.tk',
+                    'host': 'py-chat.tk',
+                    'port': 1984,
+                    'user_nick': '**<аноним> **',
+                    'NamefagMode': False,
+                    'icon_path':'res/Images/0chan.ru.ico'   
                 }
             },
         'style_color': {
@@ -91,10 +106,14 @@ class Config():
     def Save(self,settings = None):
         if not settings:
             settings = self.settings
-        if self.Load_and_Return() == self.settings: return True
+        if os.path.exists(G['script_dir']+'/'+self.setting_file_name):    
+            if self.Load_and_Return() == self.settings: return True
             
-        Debug.info('Write config: \'%s\'' % (os.path.abspath(self.paths['config_dir']+'/'+self.setting_file_name)))
-        file_h = file(self.setting_file_name,'w+')
+        Debug.info('Write config: \'%s\'' % (G['script_dir']+'/'+self.setting_file_name))
+        
+            
+        file_h = open(self.setting_file_name,'w+')
+        #file_h = file(self.setting_file_name,'w+')
         yaml.dump(settings, file_h, 
             default_flow_style=None,
             #default_style='\'',
@@ -105,18 +124,21 @@ class Config():
         
     def Load_and_Return(self):
         try:
-            if not os.path.exists(os.path.abspath(self.paths['config_dir']+'/'+self.setting_file_name)):
-                Debug.warr("Произошла ошибка при загрузке конфига %s будут использованны настройки по умолчанию." % (os.path.abspath(self.paths['config_dir']+'/'+self.setting_file_name)))
-                self.Save(self.def_settings)
+            if not os.path.exists( G['script_dir']+'/'+self.setting_file_name):
+                Debug.warr("Произошла ошибка при загрузке конфига %s будут использованны настройки по умолчанию." % (os.path.abspath(os.path.dirname(__file__)+'/'+self.setting_file_name)))
+                #self.Save(self.def_settings)
                 settings = self.def_settings.copy()
+                self.Save(settings)
                 return settings
-            Debug.info('Read config: \'%s\'' % (os.path.abspath(self.paths['config_dir']+'/'+self.setting_file_name)))
-            file_h = file(os.path.abspath(self.setting_file_name),'r')
+            Debug.info('Read config: \'%s\'' % (os.path.abspath(G['script_dir']+'/'+self.setting_file_name)))
+            file_h = open(os.path.abspath(self.setting_file_name),'r')
+            #file_h = file(os.path.abspath(self.setting_file_name),'r')
             settings = yaml.load(file_h)
             file_h.close()
             return settings
-        except Exception,err:
-            MessageBox(err,'Fatal error',type=QtGui.QMessageBox.Warning)
+        except Exception, err:
+            Debug.err(err)
+            MessageBox(str(err),'Fatal error',type=QtGui.QMessageBox.Warning)
             sys.exit()
 
     def Load(self):
