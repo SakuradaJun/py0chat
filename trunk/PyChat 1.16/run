@@ -1,7 +1,0 @@
-#!/bin/sh
-PYCHAT_DIR=$(dirname $0)
-echo "cd '$PYCHAT_DIR'"
-cd $PYCHAT_DIR
-./pychat.py
-echo "\n"
-echo "Exit"
